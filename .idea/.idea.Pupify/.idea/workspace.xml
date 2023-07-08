@@ -5,34 +5,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e1ee66ce-aac4-4ad4-ac9d-5995e5c04d9b" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.Pupify/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.Pupify/.idea/encodings.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.Pupify/.idea/indexLayout.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.Pupify/.idea/vcs.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.vs/ProjectEvaluation/pupify.metadata.v7.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.vs/ProjectEvaluation/pupify.metadata.v7.bin" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.vs/ProjectEvaluation/pupify.projects.v7.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.vs/ProjectEvaluation/pupify.projects.v7.bin" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.vs/Pupify/DesignTimeBuild/.dtbcache.v2" beforeDir="false" afterPath="$PROJECT_DIR$/.vs/Pupify/DesignTimeBuild/.dtbcache.v2" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.vs/Pupify/FileContentIndex/9bae9f8e-d63c-43e1-93df-97f1d43978fd.vsidx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.vs/Pupify/v17/.futdcache.v2" beforeDir="false" afterPath="$PROJECT_DIR$/.vs/Pupify/v17/.futdcache.v2" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.vs/Pupify/v17/.suo" beforeDir="false" afterPath="$PROJECT_DIR$/.vs/Pupify/v17/.suo" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Pupify/.idea/.idea.Pupify/.idea/vcs.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Pupify/.idea/.idea.Pupify/.idea/workspace.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/DressMySlugcat.dll" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/DressMySlugcat.dll.config" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/DressMySlugcat.pdb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/SlugBase.dll" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/SlugBase.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/mod/modinfo.json" beforeDir="false" afterPath="$PROJECT_DIR$/mod/modinfo.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.Pupify/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Pupify/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mod/plugins/Pupify.dll" beforeDir="false" afterPath="$PROJECT_DIR$/mod/plugins/Pupify.dll" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mod/plugins/Pupify.pdb" beforeDir="false" afterPath="$PROJECT_DIR$/mod/plugins/Pupify.pdb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/.idea/.idea.src.dir/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/.idea/.idea.src.dir/.idea/encodings.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/.idea/.idea.src.dir/.idea/indexLayout.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Player.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Pupify.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/src/Pupify.csproj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/TemplateMod.cs" beforeDir="false" afterPath="$PROJECT_DIR$/src/Plugin.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/TemplateModOptions.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Plugin.cs" beforeDir="false" afterPath="$PROJECT_DIR$/src/Plugin.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bin/Debug/net48/Pupify.dll" beforeDir="false" afterPath="$PROJECT_DIR$/src/bin/Debug/net48/Pupify.dll" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bin/Debug/net48/Pupify.pdb" beforeDir="false" afterPath="$PROJECT_DIR$/src/bin/Debug/net48/Pupify.pdb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/obj/Debug/net48/Pupify.csproj.CoreCompileInputs.cache" beforeDir="false" afterPath="$PROJECT_DIR$/src/obj/Debug/net48/Pupify.csproj.CoreCompileInputs.cache" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/obj/Debug/net48/Pupify.dll" beforeDir="false" afterPath="$PROJECT_DIR$/src/obj/Debug/net48/Pupify.dll" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/obj/Debug/net48/Pupify.pdb" beforeDir="false" afterPath="$PROJECT_DIR$/src/obj/Debug/net48/Pupify.pdb" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -41,6 +22,10 @@
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/1014ff9a5d9941ab9e645d4f5c9384a566f600/6b/19b708e2/FoodMeter.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/978d7800359b4d238820d6bf95ca84988400/a9/a4ae784a/LogHooks.cs" root0="SKIP_HIGHLIGHTING" />
   </component>
   <component name="ProjectId" id="2SGdlNyBvYTg81eDptXSlO2YZHc" />
   <component name="ProjectViewState">
@@ -68,7 +53,7 @@
     ]
   }
 }]]></component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Attach to Unity Player.WindowsPlayer(LAPTOP-4UR661UG)">
     <configuration name="Attach to Unity Editor" type="UNITY_DEBUG_RUN_CONFIGURATION" factoryName="Unity Debug" show_console_on_std_err="false" show_console_on_std_out="false" port="50000" address="localhost">
       <option name="allowRunningInParallel" value="false" />
       <option name="listenPortForConnections" value="false" />
@@ -79,6 +64,18 @@
       </option>
       <method v="2" />
     </configuration>
+    <configuration name="WindowsPlayer(LAPTOP-4UR661UG)" type="UnityPlayer" factoryName="UnityAttachToPlayer" temporary="true">
+      <option name="host" value="192.168.1.57" />
+      <option name="playerId" value="WindowsPlayer(LAPTOP-4UR661UG)" />
+      <option name="port" value="56336" />
+      <option name="projectName" value="&lt;no name&gt;" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Attach to Unity Player.WindowsPlayer(LAPTOP-4UR661UG)" />
+      </list>
+    </recent_temporary>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
@@ -88,11 +85,56 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1688777002220</updated>
-      <workItem from="1688777003233" duration="2982000" />
+      <workItem from="1688777003233" duration="8422000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="DotNet Breakpoints">
+          <url>file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/1014ff9a5d9941ab9e645d4f5c9384a566f600/6b/19b708e2/FoodMeter.cs</url>
+          <line>318</line>
+          <properties documentPath="C:\Users\irish\AppData\Roaming\JetBrains\Rider2023.1\resharper-host\DecompilerCache\decompiler\1014ff9a5d9941ab9e645d4f5c9384a566f600\6b\19b708e2\FoodMeter.cs" initialLine="318" containingFunctionPresentation="Method 'UpdateShowCount'">
+            <startOffsets>
+              <option value="15536" />
+            </startOffsets>
+            <endOffsets>
+              <option value="15565" />
+            </endOffsets>
+          </properties>
+          <option name="timeStamp" value="3" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DotNet Breakpoints">
+          <url>file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/1014ff9a5d9941ab9e645d4f5c9384a566f600/6b/19b708e2/FoodMeter.cs</url>
+          <line>333</line>
+          <properties documentPath="C:\Users\irish\AppData\Roaming\JetBrains\Rider2023.1\resharper-host\DecompilerCache\decompiler\1014ff9a5d9941ab9e645d4f5c9384a566f600\6b\19b708e2\FoodMeter.cs" initialLine="333" containingFunctionPresentation="Method 'UpdateShowCount'">
+            <startOffsets>
+              <option value="16009" />
+            </startOffsets>
+            <endOffsets>
+              <option value="16035" />
+            </endOffsets>
+          </properties>
+          <option name="timeStamp" value="4" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DotNet Breakpoints">
+          <url>file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/1014ff9a5d9941ab9e645d4f5c9384a566f600/6b/19b708e2/FoodMeter.cs</url>
+          <line>335</line>
+          <properties documentPath="C:\Users\irish\AppData\Roaming\JetBrains\Rider2023.1\resharper-host\DecompilerCache\decompiler\1014ff9a5d9941ab9e645d4f5c9384a566f600\6b\19b708e2\FoodMeter.cs" initialLine="335" containingFunctionPresentation="Method 'UpdateShowCount'">
+            <startOffsets>
+              <option value="16062" />
+            </startOffsets>
+            <endOffsets>
+              <option value="16091" />
+            </endOffsets>
+          </properties>
+          <option name="timeStamp" value="5" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>
