@@ -1,0 +1,9 @@
+C:\Users\irish\OneDrive\Documents\GitHub\Pupify\src\bin\Debug\net48\Pupify.dll
+C:\Users\irish\OneDrive\Documents\GitHub\Pupify\src\bin\Debug\net48\Pupify.pdb
+C:\Users\irish\OneDrive\Documents\GitHub\Pupify\src\obj\Debug\net48\Pupify.csproj.AssemblyReference.cache
+C:\Users\irish\OneDrive\Documents\GitHub\Pupify\src\obj\Debug\net48\Pupify.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\irish\OneDrive\Documents\GitHub\Pupify\src\obj\Debug\net48\Pupify.AssemblyInfoInputs.cache
+C:\Users\irish\OneDrive\Documents\GitHub\Pupify\src\obj\Debug\net48\Pupify.AssemblyInfo.cs
+C:\Users\irish\OneDrive\Documents\GitHub\Pupify\src\obj\Debug\net48\Pupify.csproj.CoreCompileInputs.cache
+C:\Users\irish\OneDrive\Documents\GitHub\Pupify\src\obj\Debug\net48\Pupify.dll
+C:\Users\irish\OneDrive\Documents\GitHub\Pupify\src\obj\Debug\net48\Pupify.pdb

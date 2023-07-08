@@ -14,6 +14,8 @@
 
 	<ItemGroup>
 		<Compile Remove="Hooks\ExtEnumHooks.cs" />
+		<Compile Remove="TemplateModOptions.cs" />
+		<Compile Remove="Player.cs" />
 	</ItemGroup>
 
 	<Target Name="GenerateMod" AfterTargets="PostBuildEvent">

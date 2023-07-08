@@ -1,10 +1,10 @@
 {
-  "id": "AuthorName.ModName",
-  "name": "Mod Name",
+  "id": "elumenix.pupify",
+  "name": "Pupify",
   "version": "1.0.0",
-  "authors": "Author 1, Author 2",
-  "description": "Slugcat likes to zoom",
-  "requirements": [],
-  "requirements_names": [],
+  "authors": "Elumenix",
+  "description": "Play as your favorite slugs in their adolescence!",
+  "requirements": ["moreslugcats"],
+  "requirements_names": ["More Slugcats Expansion"],
   "checksum_override_version": true
 }
