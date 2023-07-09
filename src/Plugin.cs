@@ -4,6 +4,7 @@ using System.Security.Permissions;
 using BepInEx;
 using HarmonyLib;
 using On.HUD;
+using On.MoreSlugcats;
 using UnityEngine;
 
 #pragma warning disable CS0618
@@ -35,8 +36,10 @@ public class Plugin : BaseUnityPlugin
             var slugpupCheck = typeof(Plugin).GetMethod("Player_isSlugpup");
             harmony.Patch(slugpupMethod, prefix: new HarmonyMethod(slugpupCheck));
             
+            
             On.HUD.FoodMeter.ctor += FoodMeter_ctor;
-            On.Player.ctor += Player_ctor;
+            On.HUD.FoodMeter.Update += FoodMeterOnUpdate;
+            On.MoreSlugcats.MSCRoomSpecificScript.SpearmasterGateLocation.Update += SpearmasterGateLocation_Update;
             On.RainWorldGame.ShutDownProcess += RainWorldGame_ShutDownProcess;
             On.GameSession.ctor += GameSession_ctor;
             
@@ -49,26 +52,33 @@ public class Plugin : BaseUnityPlugin
         }
     }
 
-    private void Player_ctor(On.Player.orig_ctor orig, Player self, AbstractCreature abstractcreature, World world)
+    private void SpearmasterGateLocation_Update(MSCRoomSpecificScript.SpearmasterGateLocation.orig_Update orig, MoreSlugcats.MSCRoomSpecificScript.SpearmasterGateLocation self, bool eu)
     {
-        orig(self, abstractcreature, world);
-        
-        // Crash will be caused if higher value than slugpup
-        while (self.playerState.foodInStomach > 1)
+        orig(self, eu);
+
+        // Makes sure that spearmaster doesn't spawn with more food than a pup should have
+        // which would cause an out of range error upon the first time eating, strictly on cycle 0
+        foreach (var t in self.room.game.Players)
         {
-            self.SubtractFood(1);
+            if ((t.realizedCreature as Player)?.SlugCatClass ==
+                MoreSlugcats.MoreSlugcatsEnums.SlugcatStatsName.Spear)
+            {
+                ((Player) t.realizedCreature).playerState.foodInStomach = 1;
+            }
         }
     }
+
+    private void FoodMeterOnUpdate(FoodMeter.orig_Update orig, HUD.FoodMeter self)
+    {
+        orig(self);
+        Debug.Log(" " + self.hud.owner.CurrentFood);
+    }
+
+    
 
     private void FoodMeter_ctor(FoodMeter.orig_ctor orig, HUD.FoodMeter self, HUD.HUD hud, int maxfood, int survivallimit, Player associatedpup, int pupnumber)
     {
         orig(self, hud, maxfood, survivallimit, associatedpup, pupnumber);
-
-        
-        Debug.Log("IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIJIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII");
-        Debug.Log(self.hud.owner.CurrentFood);
-        Debug.Log(self.circles.Count);
-        Debug.Log(self.showCount);
     }
 
     public static bool Player_isSlugpup(Player __instance, ref bool __result)
