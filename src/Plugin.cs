@@ -42,6 +42,7 @@ public class Plugin : BaseUnityPlugin
             On.MoreSlugcats.MSCRoomSpecificScript.SpearmasterGateLocation.Update += SpearmasterGateLocation_Update;
             On.RainWorldGame.ShutDownProcess += RainWorldGame_ShutDownProcess;
             On.GameSession.ctor += GameSession_ctor;
+            On.Player.ctor += Player_ctor;
             
             IsInit = true;
         }
@@ -50,6 +51,14 @@ public class Plugin : BaseUnityPlugin
             Logger.LogError(ex);
             throw;
         }
+    }
+
+    private void Player_ctor(On.Player.orig_ctor orig, Player self, AbstractCreature abstractcreature, World world)
+    {
+        orig(self, abstractcreature, world);
+        
+        // Aesthetic only
+        //self.setPupStatus(true);
     }
 
     private void SpearmasterGateLocation_Update(MSCRoomSpecificScript.SpearmasterGateLocation.orig_Update orig, MoreSlugcats.MSCRoomSpecificScript.SpearmasterGateLocation self, bool eu)
@@ -91,9 +100,14 @@ public class Plugin : BaseUnityPlugin
             // Don't use the base method
             return false;
         }
+        
+        // TODO: Remove temp line if setting individually
+        // If not aesthetic only
+        __result = true;
+        return false;
 
         // check initial
-        return true;
+        //return true;
     }
     
     private void RainWorldGame_ShutDownProcess(On.RainWorldGame.orig_ShutDownProcess orig, RainWorldGame self)

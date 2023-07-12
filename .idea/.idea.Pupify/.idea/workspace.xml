@@ -6,6 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="e1ee66ce-aac4-4ad4-ac9d-5995e5c04d9b" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Pupify/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Pupify/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Plugin.cs" beforeDir="false" afterPath="$PROJECT_DIR$/src/Plugin.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -16,8 +17,13 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/1014ff9a5d9941ab9e645d4f5c9384a566f600/6b/19b708e2/FoodMeter.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/1014ff9a5d9941ab9e645d4f5c9384a566f600/6b/19b708e2/FoodMeter.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/1014ff9a5d9941ab9e645d4f5c9384a566f600/bc/4c439095/ProcessManager.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/978d7800359b4d238820d6bf95ca84988400/a9/a4ae784a/LogHooks.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/a1e9f114a6e64f4eacb529fc802ec93d3b9a00/4c/a4a3ff6c/Environment.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/a1e9f114a6e64f4eacb529fc802ec93d3b9a00/72/ba5ce5b8/SystemException.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/a1e9f114a6e64f4eacb529fc802ec93d3b9a00/78/14a983b6/Exception.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/a1e9f114a6e64f4eacb529fc802ec93d3b9a00/a2/d30731d7/NullReferenceException.cs" root0="SKIP_HIGHLIGHTING" />
   </component>
   <component name="ProjectId" id="2SGdlNyBvYTg81eDptXSlO2YZHc" />
   <component name="ProjectViewState">
@@ -59,7 +65,7 @@
     <configuration name="WindowsPlayer(LAPTOP-4UR661UG)" type="UnityPlayer" factoryName="UnityAttachToPlayer" temporary="true">
       <option name="host" value="192.168.1.57" />
       <option name="playerId" value="WindowsPlayer(LAPTOP-4UR661UG)" />
-      <option name="port" value="56336" />
+      <option name="port" value="56477" />
       <option name="projectName" value="&lt;no name&gt;" />
       <method v="2" />
     </configuration>
@@ -79,6 +85,7 @@
       <updated>1688777002220</updated>
       <workItem from="1688777003233" duration="8422000" />
       <workItem from="1688921171455" duration="4044000" />
+      <workItem from="1689195698919" duration="3837000" />
     </task>
     <servers />
   </component>
@@ -126,6 +133,19 @@
             </endOffsets>
           </properties>
           <option name="timeStamp" value="5" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DotNet Breakpoints">
+          <url>file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/1014ff9a5d9941ab9e645d4f5c9384a566f600/bc/4c439095/ProcessManager.cs</url>
+          <line>385</line>
+          <properties documentPath="C:\Users\irish\AppData\Roaming\JetBrains\Rider2023.1\resharper-host\DecompilerCache\decompiler\1014ff9a5d9941ab9e645d4f5c9384a566f600\bc\4c439095\ProcessManager.cs" initialLine="385" containingFunctionPresentation="Method 'Update'">
+            <startOffsets>
+              <option value="16148" />
+            </startOffsets>
+            <endOffsets>
+              <option value="16172" />
+            </endOffsets>
+          </properties>
+          <option name="timeStamp" value="8" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
