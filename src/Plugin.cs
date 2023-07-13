@@ -5,6 +5,7 @@ using BepInEx;
 using HarmonyLib;
 using On.MoreSlugcats;
 using UnityEngine;
+using MoreSlugcatsEnums = MoreSlugcats.MoreSlugcatsEnums;
 
 #pragma warning disable CS0618
 
@@ -58,7 +59,8 @@ public class Plugin : BaseUnityPlugin
             On.Player.ctor += Player_ctor;
             On.SlugcatStats.ctor += SlugcatStats_ctor;
             On.Player.Update += Player_Update;
-            On.RainWorldGame.ExitGame += RainWorldGameOnExitGame;
+            On.ProcessManager.PostSwitchMainProcess += ProcessManager_PostSwitchMainProcess;
+            On.Player.ShortCutColor += PlayerOnShortCutColor;
 
             MachineConnector.SetRegisteredOI("elumenix.pupify", options);
             IsInit = true;
@@ -70,12 +72,25 @@ public class Plugin : BaseUnityPlugin
         }
     }
 
-    private void RainWorldGameOnExitGame(On.RainWorldGame.orig_ExitGame orig, RainWorldGame self, bool asDeath, bool asQuit)
+    private Color PlayerOnShortCutColor(On.Player.orig_ShortCutColor orig, Player self)
     {
-        // Don't accidentally alter values further after quitting to menu and restarting
-        currentSlugcat = null;
-        
-        orig(self, asDeath, asQuit);
+        if (currentSlugcat != null && self.SlugCatClass == currentSlugcat.name && !self.isNPC)
+        {
+            return PlayerGraphics.SlugcatColor(currentSlugcat.name);
+        }
+
+        return orig(self);
+    }
+
+    private void ProcessManager_PostSwitchMainProcess(On.ProcessManager.orig_PostSwitchMainProcess orig, ProcessManager self, ProcessManager.ProcessID ID)
+    {
+        if (ID == ProcessManager.ProcessID.Game)
+        {
+            // Allow game to set up starving values
+            currentSlugcat = null;
+        }
+
+        orig(self, ID);
     }
 
     private void Player_Update(On.Player.orig_Update orig, Player self, bool eu)
@@ -95,10 +110,18 @@ public class Plugin : BaseUnityPlugin
 
     private void SlugcatStats_ctor(On.SlugcatStats.orig_ctor orig, SlugcatStats self, SlugcatStats.Name slugcat, bool malnourished)
     {
-        orig(self, slugcat, malnourished);
+        // this will correct body color changes
+        orig(self, slugcat, currentSlugcat is {malnourished: true} || malnourished);
 
         if (!options.onlyCosmetic.Value)
         {
+            // This block will run twice, once following the initial creation of the campaign character
+            // The second after the creation of the pup. The player actually plays as the pup
+            // I store a reference to the first character, who will be instantiated with the correct stats the first time through
+            // When the NPCStats method runs, after the program realizes I set the player to be treated as a pup, the 
+            // method creates a new slugCatStats for the player. The second time through overwrites those stats directly
+            // This is how both stat calculation rules work. Natural slugpup rules will instead not overwrite on the second run
+
             if (currentSlugcat == null)
             {
                 currentSlugcat = self;
