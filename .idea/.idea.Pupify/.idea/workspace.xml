@@ -74,7 +74,7 @@
     <configuration name="WindowsPlayer(LAPTOP-4UR661UG)" type="UnityPlayer" factoryName="UnityAttachToPlayer" temporary="true">
       <option name="host" value="192.168.1.57" />
       <option name="playerId" value="WindowsPlayer(LAPTOP-4UR661UG)" />
-      <option name="port" value="56268" />
+      <option name="port" value="56536" />
       <option name="projectName" value="&lt;no name&gt;" />
       <method v="2" />
     </configuration>
@@ -94,7 +94,7 @@
       <updated>1688777002220</updated>
       <workItem from="1688777003233" duration="8422000" />
       <workItem from="1688921171455" duration="4044000" />
-      <workItem from="1689195698919" duration="12418000" />
+      <workItem from="1689195698919" duration="21699000" />
     </task>
     <servers />
   </component>
@@ -120,15 +120,28 @@
         <line-breakpoint enabled="true" type="DotNet Breakpoints">
           <url>file://$PROJECT_DIR$/src/Plugin.cs</url>
           <line>75</line>
-          <properties documentPath="C:\Users\irish\OneDrive\Documents\GitHub\Pupify\src\Plugin.cs" initialLine="74" containingFunctionPresentation="Method 'SlugcatStats_ctor'">
+          <properties documentPath="C:\Users\irish\OneDrive\Documents\GitHub\Pupify\src\Plugin.cs" initialLine="75" containingFunctionPresentation="Method 'RainWorldGameOnExitGame'">
             <startOffsets>
-              <option value="2257" />
+              <option value="2311" />
             </startOffsets>
             <endOffsets>
-              <option value="2291" />
+              <option value="2333" />
             </endOffsets>
           </properties>
-          <option name="timeStamp" value="10" />
+          <option name="timeStamp" value="11" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DotNet Breakpoints">
+          <url>file://$PROJECT_DIR$/src/Plugin.cs</url>
+          <line>96</line>
+          <properties documentPath="C:\Users\irish\OneDrive\Documents\GitHub\Pupify\src\Plugin.cs" initialLine="96" containingFunctionPresentation="Method 'SlugcatStats_ctor'">
+            <startOffsets>
+              <option value="3313" />
+            </startOffsets>
+            <endOffsets>
+              <option value="3314" />
+            </endOffsets>
+          </properties>
+          <option name="timeStamp" value="12" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

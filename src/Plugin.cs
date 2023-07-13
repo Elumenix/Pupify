@@ -3,7 +3,6 @@ using System.Security;
 using System.Security.Permissions;
 using BepInEx;
 using HarmonyLib;
-using On.HUD;
 using On.MoreSlugcats;
 using UnityEngine;
 
@@ -53,13 +52,13 @@ public class Plugin : BaseUnityPlugin
             harmony.Patch(slugpupMethod, prefix: new HarmonyMethod(slugpupCheck));
             
             
-            On.HUD.FoodMeter.ctor += FoodMeter_ctor;
-            On.HUD.FoodMeter.Update += FoodMeterOnUpdate;
-            On.MoreSlugcats.MSCRoomSpecificScript.SpearmasterGateLocation.Update += SpearmasterGateLocation_Update;
+            MSCRoomSpecificScript.SpearmasterGateLocation.Update += SpearmasterGateLocation_Update;
             On.RainWorldGame.ShutDownProcess += RainWorldGame_ShutDownProcess;
             On.GameSession.ctor += GameSession_ctor;
             On.Player.ctor += Player_ctor;
             On.SlugcatStats.ctor += SlugcatStats_ctor;
+            On.Player.Update += Player_Update;
+            On.RainWorldGame.ExitGame += RainWorldGameOnExitGame;
 
             MachineConnector.SetRegisteredOI("elumenix.pupify", options);
             IsInit = true;
@@ -71,6 +70,29 @@ public class Plugin : BaseUnityPlugin
         }
     }
 
+    private void RainWorldGameOnExitGame(On.RainWorldGame.orig_ExitGame orig, RainWorldGame self, bool asDeath, bool asQuit)
+    {
+        // Don't accidentally alter values further after quitting to menu and restarting
+        currentSlugcat = null;
+        
+        orig(self, asDeath, asQuit);
+    }
+
+    private void Player_Update(On.Player.orig_Update orig, Player self, bool eu)
+    {
+        orig(self, eu);
+        
+        Debug.Log("RunSpeed: " + self.slugcatStats.runspeedFac);
+        Debug.Log("BodyWeight: " + self.slugcatStats.bodyWeightFac);
+        Debug.Log("GeneralVisibility: " + self.slugcatStats.generalVisibilityBonus);
+        Debug.Log("VisualStealth: " + self.slugcatStats.visualStealthInSneakMode);
+        Debug.Log("Loudness: " + self.slugcatStats.loudnessFac);
+        Debug.Log("LungsFac: " + self.slugcatStats.lungsFac);
+        Debug.Log("ThrowingSkill: " + self.slugcatStats.throwingSkill);
+        Debug.Log("PoleClimbSpeed: " + self.slugcatStats.poleClimbSpeedFac);
+        Debug.Log("CorridorClimbSpeed: " + self.slugcatStats.corridorClimbSpeedFac);
+    }
+
     private void SlugcatStats_ctor(On.SlugcatStats.orig_ctor orig, SlugcatStats self, SlugcatStats.Name slugcat, bool malnourished)
     {
         orig(self, slugcat, malnourished);
@@ -80,23 +102,63 @@ public class Plugin : BaseUnityPlugin
             if (currentSlugcat == null)
             {
                 currentSlugcat = self;
+                
+                float percentRequired = (float)self.foodToHibernate / self.maxFood;
+                self.maxFood = Mathf.RoundToInt(self.maxFood * (3f / 7f));
+                self.foodToHibernate =
+                    Mathf.RoundToInt(self.maxFood * percentRequired * (7f / 6f));
+            
+                // This may happen with a custom slugcat with ludicrously high food values
+                if (self.foodToHibernate > self.maxFood)
+                {
+                    self.foodToHibernate = self.maxFood;
+                }
             }
             else
             {
                 // Don't override the slugpup
                 self.foodToHibernate = currentSlugcat.foodToHibernate;
                 self.maxFood = currentSlugcat.maxFood;
-                return;
             }
-            float percentRequired = (float)self.foodToHibernate / (float)self.maxFood;
-            self.maxFood = Mathf.RoundToInt(self.maxFood * (3f / 7f));
-            self.foodToHibernate =
-                Mathf.RoundToInt(self.maxFood * percentRequired * (7f / 6f));
-            
-            // This may happen with a custom slugcat with ludicrously high food values
-            if (self.foodToHibernate > self.maxFood)
+        }
+
+        // Stat adjustment option
+        if (true)
+        {
+            // second condition is added in case food was also adjusted
+            if (currentSlugcat == null || currentSlugcat == self)
             {
-                self.foodToHibernate = self.maxFood;
+                currentSlugcat = self;
+                
+                // Stat adjustments
+                self.runspeedFac = currentSlugcat.runspeedFac * .8f * (.8f / .84f); // NPCStats interferes
+                self.bodyWeightFac = currentSlugcat.bodyWeightFac * .65f * (.65f / .63375f); // NPCStats interferes
+                self.generalVisibilityBonus = currentSlugcat.generalVisibilityBonus - .2f; // Very simple adjustment
+                self.visualStealthInSneakMode = currentSlugcat.visualStealthInSneakMode * 1.2f; // Alternative was +.1f, but I thought scaling was better
+                self.loudnessFac = currentSlugcat.loudnessFac * .5f; // Probably the simplest to think about
+                self.lungsFac = currentSlugcat.lungsFac * .8f; // This is the only improvement, all slugpups have better lung capacities 
+                self.poleClimbSpeedFac = currentSlugcat.poleClimbSpeedFac * .8f * (.8f / .836f); // NPCStats interferes
+                self.corridorClimbSpeedFac = currentSlugcat.corridorClimbSpeedFac * .8f * (.8f / .84f); // NPCStats interferes
+
+                // This is a weird one because it's such a big difference, but it is only an int and doesn't vary much
+                self.throwingSkill = currentSlugcat.throwingSkill - 1;
+                if (self.throwingSkill < 0)
+                {
+                    self.throwingSkill = 0;
+                }
+            }
+            else
+            {
+                // Apply all values to pup
+                self.runspeedFac = currentSlugcat.runspeedFac;
+                self.bodyWeightFac = currentSlugcat.bodyWeightFac;
+                self.generalVisibilityBonus = currentSlugcat.generalVisibilityBonus;
+                self.visualStealthInSneakMode = currentSlugcat.visualStealthInSneakMode;
+                self.loudnessFac = currentSlugcat.loudnessFac;
+                self.lungsFac = currentSlugcat.lungsFac;
+                self.poleClimbSpeedFac = currentSlugcat.poleClimbSpeedFac;
+                self.corridorClimbSpeedFac = currentSlugcat.corridorClimbSpeedFac;
+                self.throwingSkill = currentSlugcat.throwingSkill;
             }
         }
     }
@@ -124,22 +186,10 @@ public class Plugin : BaseUnityPlugin
             if ((t.realizedCreature as Player)?.SlugCatClass ==
                 MoreSlugcats.MoreSlugcatsEnums.SlugcatStatsName.Spear)
             {
-                ((Player) t.realizedCreature).playerState.foodInStomach = 1;
+                // Override so that spearmaster doesn't start with more food than they can hold, which would crash the game
+                ((Player) t.realizedCreature).playerState.foodInStomach = 0;
             }
         }
-    }
-
-    private void FoodMeterOnUpdate(FoodMeter.orig_Update orig, HUD.FoodMeter self)
-    {
-        orig(self);
-        Debug.Log(" " + self.hud.owner.CurrentFood);
-    }
-
-    
-
-    private void FoodMeter_ctor(FoodMeter.orig_ctor orig, HUD.FoodMeter self, HUD.HUD hud, int maxfood, int survivallimit, Player associatedpup, int pupnumber)
-    {
-        orig(self, hud, maxfood, survivallimit, associatedpup, pupnumber);
     }
 
     public static bool Player_isSlugpup(Player __instance, ref bool __result)
