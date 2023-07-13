@@ -17,6 +17,21 @@ namespace Pupify;
 [BepInPlugin("elumenix.pupify", "Pupify", "1.0.0")]
 public class Plugin : BaseUnityPlugin
 {
+    private static Options options;
+
+    public Plugin()
+    {
+        try
+        {
+            options = new Options(this, Logger);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex);
+            throw;
+        }
+    }
+    
     private void OnEnable()
     {
         On.RainWorld.OnModsInit += RainWorld_OnModsInit;
@@ -43,7 +58,8 @@ public class Plugin : BaseUnityPlugin
             On.RainWorldGame.ShutDownProcess += RainWorldGame_ShutDownProcess;
             On.GameSession.ctor += GameSession_ctor;
             On.Player.ctor += Player_ctor;
-            
+
+            MachineConnector.SetRegisteredOI("elumenix.pupify", options);
             IsInit = true;
         }
         catch (Exception ex)
@@ -53,12 +69,16 @@ public class Plugin : BaseUnityPlugin
         }
     }
 
-    private void Player_ctor(On.Player.orig_ctor orig, Player self, AbstractCreature abstractcreature, World world)
+    private void Player_ctor(On.Player.orig_ctor orig, Player self, AbstractCreature abstractCreature, World world)
     {
-        orig(self, abstractcreature, world);
+        orig(self, abstractCreature, world);
         
         // Aesthetic only
-        //self.setPupStatus(true);
+        if (options.onlyCosmetic.Value)
+        {
+            // The player will be drawn as a pup, but they won't function differently
+            self.setPupStatus(true);
+        }
     }
 
     private void SpearmasterGateLocation_Update(MSCRoomSpecificScript.SpearmasterGateLocation.orig_Update orig, MoreSlugcats.MSCRoomSpecificScript.SpearmasterGateLocation self, bool eu)
@@ -92,7 +112,7 @@ public class Plugin : BaseUnityPlugin
 
     public static bool Player_isSlugpup(Player __instance, ref bool __result)
     {
-        if (__instance.SlugCatClass != null && __instance.SlugCatClass == MoreSlugcats.MoreSlugcatsEnums.SlugcatStatsName.Spear)
+        if (!options.onlyCosmetic.Value)
         {
             // This actually is an npc
             __result = true;
@@ -100,14 +120,9 @@ public class Plugin : BaseUnityPlugin
             // Don't use the base method
             return false;
         }
-        
-        // TODO: Remove temp line if setting individually
-        // If not aesthetic only
-        __result = true;
-        return false;
 
-        // check initial
-        //return true;
+        // check initial value instead
+        return true;
     }
     
     private void RainWorldGame_ShutDownProcess(On.RainWorldGame.orig_ShutDownProcess orig, RainWorldGame self)
