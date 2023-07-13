@@ -1,11 +1,20 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Security;
 using System.Security.Permissions;
 using BepInEx;
 using HarmonyLib;
+using HUD;
+using Menu;
 using On.MoreSlugcats;
+using RWCustom;
 using UnityEngine;
+using static MoreSlugcats.SpeedRunTimer;
+using MenuLabel = Menu.MenuLabel;
+using MenuObject = Menu.MenuObject;
 using MoreSlugcatsEnums = MoreSlugcats.MoreSlugcatsEnums;
+using MouseCursor = On.Menu.MouseCursor;
+using SlugcatSelectMenu = On.Menu.SlugcatSelectMenu;
 
 #pragma warning disable CS0618
 
@@ -61,6 +70,7 @@ public class Plugin : BaseUnityPlugin
             On.Player.Update += Player_Update;
             On.ProcessManager.PostSwitchMainProcess += ProcessManager_PostSwitchMainProcess;
             On.Player.ShortCutColor += PlayerOnShortCutColor;
+            On.Menu.SlugcatSelectMenu.SlugcatPageContinue.ctor += SlugcatPageContinue_ctor;
 
             MachineConnector.SetRegisteredOI("elumenix.pupify", options);
             IsInit = true;
@@ -69,6 +79,152 @@ public class Plugin : BaseUnityPlugin
         {
             Logger.LogError(ex);
             throw;
+        }
+    }
+
+    private void SlugcatPageContinue_ctor(SlugcatSelectMenu.SlugcatPageContinue.orig_ctor orig,
+        Menu.SlugcatSelectMenu.SlugcatPageContinue self, Menu.Menu menu, MenuObject owner, int pageIndex,
+        SlugcatStats.Name slugcatNumber)
+    {
+        // TODO: add subsequent options for other food meter styles
+
+        if (options.onlyCosmetic.Value)
+        {
+            orig(self, menu, owner, pageIndex, slugcatNumber);
+        }
+        else // Theres no easy way to do this without copying code, all credit to original rain world developers
+        {
+            // The first several lines of code here is going down a rabbit hole of
+            // constructors because I need to skip the orig method
+            self.menu = menu;
+            self.owner = owner;
+            self.subObjects = new List<MenuObject>();
+            self.nextSelectable = new MenuObject[4];
+            
+            self.pos = new Vector2(0.33333334f, 0.33333334f);
+            self.lastPos = new Vector2(0.33333334f, 0.33333334f);
+
+            self.name = "Slugcat_Page_" + ((slugcatNumber != null) ? slugcatNumber.ToString() : null);
+            self.index = pageIndex;
+            self.selectables = new List<SelectableMenuObject>();
+            self.mouseCursor = new Menu.MouseCursor(menu, self, new Vector2(-100f, -100f));
+            self.subObjects.Add(self.mouseCursor);
+            
+            self.slugcatNumber = slugcatNumber;
+            self.effectColor = PlayerGraphics.DefaultSlugcatColor(slugcatNumber);
+            if (slugcatNumber == SlugcatStats.Name.Red)
+            {
+                self.effectColor = Color.Lerp(self.effectColor, Color.red, 0.2f);
+            }
+            
+            if (ModManager.MSC && self.saveGameData.altEnding &&
+                ((slugcatNumber == SlugcatStats.Name.White && 
+                  menu.manager.rainWorld.progression.miscProgressionData.survivorEndingID > 1) ||
+                 (slugcatNumber == SlugcatStats.Name.Yellow &&
+                  menu.manager.rainWorld.progression.miscProgressionData.monkEndingID > 1) ||
+                 (slugcatNumber != SlugcatStats.Name.White && slugcatNumber != SlugcatStats.Name.Yellow &&
+                  slugcatNumber != SlugcatStats.Name.Red)))
+            {
+                self.AddAltEndingImage();
+            }
+            else
+            {
+                self.AddImage(self.saveGameData.ascended);
+            }
+            self.hudContainers = new FContainer[2];
+            for (int i = 0; i < self.hudContainers.Length; i++)
+            {
+                self.hudContainers[i] = new FContainer();
+                self.Container.AddChild(self.hudContainers[i]);
+            }
+            self.hud = new global::HUD.HUD(self.hudContainers, menu.manager.rainWorld, self);
+            self.saveGameData.karma = Custom.IntClamp(self.saveGameData.karma, 0, self.saveGameData.karmaCap);
+            if (ModManager.MSC && slugcatNumber == MoreSlugcatsEnums.SlugcatStatsName.Artificer &&
+                self.saveGameData.altEnding &&
+                menu.manager.rainWorld.progression.miscProgressionData.artificerEndingID != 1)
+            {
+                self.saveGameData.karma = 0;
+                self.saveGameData.karmaCap = 0;
+            }
+            if (ModManager.MSC && slugcatNumber == MoreSlugcatsEnums.SlugcatStatsName.Saint && self.saveGameData.ascended)
+            {
+                self.saveGameData.karma = 1;
+                self.saveGameData.karmaCap = 1;
+            }
+            
+            self.hud.AddPart(new KarmaMeter(self.hud, self.hudContainers[1],
+                new IntVector2(self.saveGameData.karma, self.saveGameData.karmaCap),
+                self.saveGameData.karmaReinforced));
+
+            // TODO: other options
+            // The strategy here is to just completely redo the calculation each time because it's inexpensive
+            // and also prevents me from needing to deal with several edge cases related to changing save files
+            // whenever the food option on the mod is changed
+            if (true)
+            {
+                float percentRequired = (float) SlugcatStats.SlugcatFoodMeter(slugcatNumber).y /
+                                        SlugcatStats.SlugcatFoodMeter(slugcatNumber).x;
+                int maxFood = Mathf.RoundToInt(SlugcatStats.SlugcatFoodMeter(slugcatNumber).x * (3f / 7f));
+                int foodToHibernate = Mathf.RoundToInt(maxFood * percentRequired * (7f / 6f));
+            
+                // This may happen with a custom slugcat with ludicrously high food values
+                if (foodToHibernate > maxFood)
+                {
+                    foodToHibernate = maxFood;
+                }
+                
+                // TODO: seems important for changes, don't forget it
+                // Hopefully this prevents circles from filling in past the bar
+                self.saveGameData.food =
+                    Custom.IntClamp(self.saveGameData.food, 0, maxFood - foodToHibernate);
+                
+                self.hud.AddPart(new FoodMeter(self.hud, maxFood, foodToHibernate));
+            }
+            else if (true)
+            {
+                // original method Default food stats
+
+                self.saveGameData.food = Custom.IntClamp(self.saveGameData.food, 0,
+                    SlugcatStats.SlugcatFoodMeter(slugcatNumber).y);
+                self.hud.AddPart(new FoodMeter(self.hud, SlugcatStats.SlugcatFoodMeter(slugcatNumber).x,
+                    SlugcatStats.SlugcatFoodMeter(slugcatNumber).y));
+            }
+            else
+            {
+                // Third thing where locked to pup
+                self.saveGameData.food = Custom.IntClamp(self.saveGameData.food, 0,
+                    1);
+                self.hud.AddPart(new FoodMeter(self.hud, 3,
+                    2));
+            }
+            
+
+            string text = "";
+            if (self.saveGameData.shelterName is {Length: > 2})
+            {
+                text = Region.GetRegionFullName(self.saveGameData.shelterName.Substring(0, 2), slugcatNumber);
+                if (text.Length > 0)
+                {
+                    text = menu.Translate(text);
+                    text = text + " - " + menu.Translate("Cycle") + " " + ((slugcatNumber == SlugcatStats.Name.Red)
+                        ? (RedsIllness.RedsCycles(self.saveGameData.redsExtraCycles) - self.saveGameData.cycle)
+                        : self.saveGameData.cycle);
+                    if (ModManager.MMF)
+                    {
+                        TimeSpan timeSpan = TimeSpan.FromSeconds(self.saveGameData.gameTimeAlive +
+                                                                 (double) self.saveGameData.gameTimeDead);
+                        text = text + " (" + timeSpan + ")";
+                    }
+                }
+            }
+            self.regionLabel = new MenuLabel(menu, self, text, new Vector2(-1000f, self.imagePos.y - 249f), new Vector2(200f, 30f), bigText: true)
+            {
+                label =
+                {
+                    alignment = FLabelAlignment.Center
+                }
+            };
+            self.subObjects.Add(self.regionLabel);
         }
     }
 
@@ -82,7 +238,7 @@ public class Plugin : BaseUnityPlugin
         return orig(self);
     }
 
-    private void ProcessManager_PostSwitchMainProcess(On.ProcessManager.orig_PostSwitchMainProcess orig, ProcessManager self, ProcessManager.ProcessID ID)
+    private void ProcessManager_PostSwitchMainProcess(On.ProcessManager.orig_PostSwitchMainProcess orig, ProcessManager self, ProcessManager.ProcessID ID) 
     {
         if (ID == ProcessManager.ProcessID.Game)
         {
@@ -196,6 +352,15 @@ public class Plugin : BaseUnityPlugin
             // The player will be drawn as a pup, but they won't function differently
             self.setPupStatus(true);
         }
+        else
+        {
+            // An exception will be thrown and the player can't eat if they start with more food than the food bar can hold
+            // This can only actually happen if they activate or switch the mod settings mid campaign
+            if (self.playerState.foodInStomach > self.slugcatStats.maxFood - self.slugcatStats.foodToHibernate)
+            {
+                self.playerState.foodInStomach = self.slugcatStats.maxFood - self.slugcatStats.foodToHibernate;
+            }
+        }
     }
 
     private void SpearmasterGateLocation_Update(MSCRoomSpecificScript.SpearmasterGateLocation.orig_Update orig, MoreSlugcats.MSCRoomSpecificScript.SpearmasterGateLocation self, bool eu)
@@ -207,7 +372,7 @@ public class Plugin : BaseUnityPlugin
         foreach (var t in self.room.game.Players)
         {
             if ((t.realizedCreature as Player)?.SlugCatClass ==
-                MoreSlugcats.MoreSlugcatsEnums.SlugcatStatsName.Spear)
+                MoreSlugcatsEnums.SlugcatStatsName.Spear)
             {
                 // Override so that spearmaster doesn't start with more food than they can hold, which would crash the game
                 ((Player) t.realizedCreature).playerState.foodInStomach = 0;
