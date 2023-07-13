@@ -5,7 +5,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e1ee66ce-aac4-4ad4-ac9d-5995e5c04d9b" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/Options.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Pupify/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Pupify/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Plugin.cs" beforeDir="false" afterPath="$PROJECT_DIR$/src/Plugin.cs" afterDir="false" />
     </list>
@@ -18,13 +17,22 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="HighlightingSettingsPerFile">
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/03f8e64dbb9c4841b4665e15d94870d12de00/68/c5fa309b/DynamicMethodHelper.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/1014ff9a5d9941ab9e645d4f5c9384a566f600/6b/19b708e2/FoodMeter.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/1014ff9a5d9941ab9e645d4f5c9384a566f600/91/3ce5c77a/StoryGameSession.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/1014ff9a5d9941ab9e645d4f5c9384a566f600/9c/f52ec0af/IntVector2.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/1014ff9a5d9941ab9e645d4f5c9384a566f600/bc/4c439095/ProcessManager.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/1014ff9a5d9941ab9e645d4f5c9384a566f600/d0/d4d5cb0d/ExtEnum`1.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/3a06c05e8e2e4bb296eed03cf904d4791d9600/46/96bf7e17/pmhdIRhCoLlQZffSYgOmsLkpxsjN.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/58cd2bf3087e438cbbff2bb3befa3d0c1d800/25/b9467880/FeatureHooks.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/978d7800359b4d238820d6bf95ca84988400/a9/a4ae784a/LogHooks.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/a1e9f114a6e64f4eacb529fc802ec93d3b9a00/2f/ee6c3ac6/List`1.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/a1e9f114a6e64f4eacb529fc802ec93d3b9a00/4c/a4a3ff6c/Environment.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/a1e9f114a6e64f4eacb529fc802ec93d3b9a00/72/ba5ce5b8/SystemException.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/a1e9f114a6e64f4eacb529fc802ec93d3b9a00/78/14a983b6/Exception.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/a1e9f114a6e64f4eacb529fc802ec93d3b9a00/98/4e31d35f/IntPtr.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/a1e9f114a6e64f4eacb529fc802ec93d3b9a00/a2/d30731d7/NullReferenceException.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/a1e9f114a6e64f4eacb529fc802ec93d3b9a00/d9/a1939455/String.cs" root0="SKIP_HIGHLIGHTING" />
   </component>
   <component name="ProjectId" id="2SGdlNyBvYTg81eDptXSlO2YZHc" />
   <component name="ProjectViewState">
@@ -66,7 +74,7 @@
     <configuration name="WindowsPlayer(LAPTOP-4UR661UG)" type="UnityPlayer" factoryName="UnityAttachToPlayer" temporary="true">
       <option name="host" value="192.168.1.57" />
       <option name="playerId" value="WindowsPlayer(LAPTOP-4UR661UG)" />
-      <option name="port" value="56477" />
+      <option name="port" value="56268" />
       <option name="projectName" value="&lt;no name&gt;" />
       <method v="2" />
     </configuration>
@@ -86,7 +94,7 @@
       <updated>1688777002220</updated>
       <workItem from="1688777003233" duration="8422000" />
       <workItem from="1688921171455" duration="4044000" />
-      <workItem from="1689195698919" duration="8018000" />
+      <workItem from="1689195698919" duration="12418000" />
     </task>
     <servers />
   </component>
@@ -110,43 +118,17 @@
           <option name="timeStamp" value="3" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DotNet Breakpoints">
-          <url>file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/1014ff9a5d9941ab9e645d4f5c9384a566f600/6b/19b708e2/FoodMeter.cs</url>
-          <line>333</line>
-          <properties documentPath="C:\Users\irish\AppData\Roaming\JetBrains\Rider2023.1\resharper-host\DecompilerCache\decompiler\1014ff9a5d9941ab9e645d4f5c9384a566f600\6b\19b708e2\FoodMeter.cs" initialLine="333" containingFunctionPresentation="Method 'UpdateShowCount'">
+          <url>file://$PROJECT_DIR$/src/Plugin.cs</url>
+          <line>75</line>
+          <properties documentPath="C:\Users\irish\OneDrive\Documents\GitHub\Pupify\src\Plugin.cs" initialLine="74" containingFunctionPresentation="Method 'SlugcatStats_ctor'">
             <startOffsets>
-              <option value="16009" />
+              <option value="2257" />
             </startOffsets>
             <endOffsets>
-              <option value="16035" />
+              <option value="2291" />
             </endOffsets>
           </properties>
-          <option name="timeStamp" value="4" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DotNet Breakpoints">
-          <url>file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/1014ff9a5d9941ab9e645d4f5c9384a566f600/6b/19b708e2/FoodMeter.cs</url>
-          <line>335</line>
-          <properties documentPath="C:\Users\irish\AppData\Roaming\JetBrains\Rider2023.1\resharper-host\DecompilerCache\decompiler\1014ff9a5d9941ab9e645d4f5c9384a566f600\6b\19b708e2\FoodMeter.cs" initialLine="335" containingFunctionPresentation="Method 'UpdateShowCount'">
-            <startOffsets>
-              <option value="16062" />
-            </startOffsets>
-            <endOffsets>
-              <option value="16091" />
-            </endOffsets>
-          </properties>
-          <option name="timeStamp" value="5" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DotNet Breakpoints">
-          <url>file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/1014ff9a5d9941ab9e645d4f5c9384a566f600/bc/4c439095/ProcessManager.cs</url>
-          <line>385</line>
-          <properties documentPath="C:\Users\irish\AppData\Roaming\JetBrains\Rider2023.1\resharper-host\DecompilerCache\decompiler\1014ff9a5d9941ab9e645d4f5c9384a566f600\bc\4c439095\ProcessManager.cs" initialLine="385" containingFunctionPresentation="Method 'Update'">
-            <startOffsets>
-              <option value="16148" />
-            </startOffsets>
-            <endOffsets>
-              <option value="16172" />
-            </endOffsets>
-          </properties>
-          <option name="timeStamp" value="8" />
+          <option name="timeStamp" value="10" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

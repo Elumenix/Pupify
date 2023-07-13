@@ -19,6 +19,7 @@ public class Plugin : BaseUnityPlugin
 {
     private static Options options;
 
+    private static SlugcatStats currentSlugcat;
     public Plugin()
     {
         try
@@ -58,6 +59,7 @@ public class Plugin : BaseUnityPlugin
             On.RainWorldGame.ShutDownProcess += RainWorldGame_ShutDownProcess;
             On.GameSession.ctor += GameSession_ctor;
             On.Player.ctor += Player_ctor;
+            On.SlugcatStats.ctor += SlugcatStats_ctor;
 
             MachineConnector.SetRegisteredOI("elumenix.pupify", options);
             IsInit = true;
@@ -66,6 +68,36 @@ public class Plugin : BaseUnityPlugin
         {
             Logger.LogError(ex);
             throw;
+        }
+    }
+
+    private void SlugcatStats_ctor(On.SlugcatStats.orig_ctor orig, SlugcatStats self, SlugcatStats.Name slugcat, bool malnourished)
+    {
+        orig(self, slugcat, malnourished);
+
+        if (!options.onlyCosmetic.Value)
+        {
+            if (currentSlugcat == null)
+            {
+                currentSlugcat = self;
+            }
+            else
+            {
+                // Don't override the slugpup
+                self.foodToHibernate = currentSlugcat.foodToHibernate;
+                self.maxFood = currentSlugcat.maxFood;
+                return;
+            }
+            float percentRequired = (float)self.foodToHibernate / (float)self.maxFood;
+            self.maxFood = Mathf.RoundToInt(self.maxFood * (3f / 7f));
+            self.foodToHibernate =
+                Mathf.RoundToInt(self.maxFood * percentRequired * (7f / 6f));
+            
+            // This may happen with a custom slugcat with ludicrously high food values
+            if (self.foodToHibernate > self.maxFood)
+            {
+                self.foodToHibernate = self.maxFood;
+            }
         }
     }
 
