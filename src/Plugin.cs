@@ -71,7 +71,9 @@ public class Plugin : BaseUnityPlugin
             On.Player.FreeHand += Player_FreeHand;
             On.Player.SlugcatGrab += Player_SlugcatGrab;
             On.Player.GrabUpdate += Player_GrabUpdate;
-            On.MoreSlugcats.CutsceneArtificer.Update += CutsceneArtificer_Update;
+            CutsceneArtificer.Update += CutsceneArtificer_Update;
+            On.Player.CanEatMeat += Player_CanEatMeat;
+            On.HardmodeStart.SinglePlayerUpdate += HardmodeStart_SinglePlayerUpdate;
             
 
             MachineConnector.SetRegisteredOI("elumenix.pupify", options);
@@ -82,6 +84,37 @@ public class Plugin : BaseUnityPlugin
             Logger.LogError(ex);
             throw;
         }
+    }
+
+    private void HardmodeStart_SinglePlayerUpdate(On.HardmodeStart.orig_SinglePlayerUpdate orig, HardmodeStart self)
+    {
+        // Hunter's intro, which attempts to fill his food meter past the bar on cycle 0
+        orig(self);
+
+        if (self.room.game.Players[0].realizedCreature is Player {playerState: not null} player)
+        {
+            player.playerState.foodInStomach = 0;
+        }
+    }
+
+    private bool Player_CanEatMeat(On.Player.orig_CanEatMeat orig, Player self, Creature crit)
+    {
+        if (ModManager.MSC && (self.SlugCatClass == MoreSlugcatsEnums.SlugcatStatsName.Saint || self.SlugCatClass == MoreSlugcatsEnums.SlugcatStatsName.Spear))
+        {
+            return false;
+        }
+        if (self.EatMeatOmnivoreGreenList(crit) && crit.dead)
+        {
+            return !ModManager.MSC || self.pyroJumpCooldown <= 60f;
+        }
+        
+        Debug.Log(!(crit is IPlayerEdible));
+        Debug.Log(crit.dead);
+        Debug.Log(self.slugcatStats.name == MoreSlugcatsEnums.SlugcatStatsName.Artificer);
+        Debug.Log(!ModManager.CoopAvailable || crit is not Player);
+        Debug.Log((!ModManager.MSC || self.pyroJumpCooldown <= 60f));
+
+        return options.letEatMeat.Value && (orig(self, crit) || (!(crit is IPlayerEdible) && crit.dead && (self.SlugCatClass == SlugcatStats.Name.Red || (ModManager.MSC && (self.SlugCatClass == MoreSlugcatsEnums.SlugcatStatsName.Artificer || self.SlugCatClass == MoreSlugcatsEnums.SlugcatStatsName.Gourmand || self.SlugCatClass == MoreSlugcatsEnums.SlugcatStatsName.Sofanthiel))) && (!ModManager.CoopAvailable || !(crit is Player)) && (!ModManager.MSC || self.pyroJumpCooldown <= 60f)));
     }
 
     private void CutsceneArtificer_Update(CutsceneArtificer.orig_Update orig, MoreSlugcats.CutsceneArtificer self, bool eu)

@@ -20,6 +20,7 @@ public class Options : OptionInterface
         bothHands = config.Bind("bothHands", false);
         letStomach = config.Bind("letStomach", false);
         letMaul = config.Bind("letMaul", false);
+        letEatMeat = config.Bind("letEatMeat", false);
     }
 
     public readonly Configurable<bool> onlyCosmetic;
@@ -27,6 +28,7 @@ public class Options : OptionInterface
     public readonly Configurable<int> statsOption;
     public readonly Configurable<bool> bothHands;
     public readonly Configurable<bool> letStomach;
+    public readonly Configurable<bool> letEatMeat;
     public readonly Configurable<bool> letMaul;
 
 
@@ -92,6 +94,10 @@ public class Options : OptionInterface
                 },
                 
 				new OpLabel(15f, 440f, "Carnivorous Diet", false),
+                new OpCheckBox(letEatMeat, 120f, 440f)
+                {
+                    description = "What kind of child are you? You aren't meant to eat vultures."
+                },
 				
 				new OpLabel(15f, 380f, "Mauling", false),
                 new OpCheckBox(letMaul, 120f, 380f)
