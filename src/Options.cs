@@ -1,6 +1,8 @@
-﻿using BepInEx.Logging;
+﻿using System.Collections.Generic;
+using BepInEx.Logging;
 using Menu.Remix.MixedUI;
 using Menu.Remix.MixedUI.ValueTypes;
+using On.Menu;
 using UnityEngine;
 
 namespace Pupify;
@@ -13,12 +15,13 @@ public class Options : OptionInterface
     {
         Logger = loggerSource;
         onlyCosmetic = this.config.Bind<bool>("onlyCosmetic", false);
-        //PlayerSpeed = this.config.Bind<float>("PlayerSpeed", 1f, new ConfigAcceptableRange<float>(0f, 100f));
+        foodOption = this.config.Bind<int>("foodOption", 0);
     }
 
-    //public readonly Configurable<float> PlayerSpeed;
     public readonly Configurable<bool> onlyCosmetic;
+    public readonly Configurable<int> foodOption;
     private UIelement[] UIArrPlayerOptions;
+    private OpRadioButtonGroup foodGroup;
     
     
     public override void Initialize()
@@ -29,10 +32,10 @@ public class Options : OptionInterface
             opTab
         };
 
-        //new OpLabel(10f, 520f, "Player run speed factor"),
-        //new OpUpdown(PlayerSpeed, new Vector2(10f,490f), 100f, 1),
-            
-        //new OpLabel(10f, 460f, "Gotta go fast!", false){ color = new Color(0.2f, 0.5f, 0.8f) },
+        // I would have loved any sort of documentation to figure this out
+        foodGroup = new OpRadioButtonGroup(foodOption);
+        foodGroup.SetButtons(new OpRadioButton[] {new(100f, 420f), new(300f, 420f), new(500f, 420f)});
+        
         
         UIArrPlayerOptions = new UIelement[]
         {
@@ -40,20 +43,40 @@ public class Options : OptionInterface
             new OpLabel(10f, 520f, "Treat Pups as Cosmetic: "),
             new OpCheckBox(onlyCosmetic, 150f, 520f),
             
-            new OpLabel(10, 400, "Great! You don't need all these other options now."){color = new Color(0.85f,0.2f,0.4f)}
+            new OpLabel(10f, 450f, "Food Values:", true),
+            new OpLabel(50f, 420f, "Scaled"),
+            foodGroup, // Config button shows up on this one but options still don't apply
+            foodGroup.buttons[0],
+            new OpLabel(225, 420, "Base Game"),
+            foodGroup.buttons[1],
+            new OpLabel(440, 420, "Slugpup"),
+            foodGroup.buttons[2],
+
+
+            new OpLabel(10, 400, "Great! You don't need all these other options now.", true){color = new Color(0.85f,0.2f,0.4f)}
         };
         opTab.AddItems(UIArrPlayerOptions);
     }
 
     public override void Update()
     {
+        Debug.Log(foodOption.Value);
+        
         if (((OpCheckBox)UIArrPlayerOptions[2]).GetValueBool())
         {
-            UIArrPlayerOptions[3].Show();
+            for (int i = 3; i < UIArrPlayerOptions.Length; i++)
+            {
+                UIArrPlayerOptions[i].Hide();
+            }
+            UIArrPlayerOptions[UIArrPlayerOptions.Length - 1].Show();
         }
         else
         {
-            UIArrPlayerOptions[3].Hide();
+            for (int i = 3; i < UIArrPlayerOptions.Length; i++)
+            {
+                UIArrPlayerOptions[i].Show();
+            }
+            UIArrPlayerOptions[UIArrPlayerOptions.Length - 1].Hide();
         }
     }
 }
