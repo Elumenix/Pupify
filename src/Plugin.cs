@@ -66,11 +66,12 @@ public class Plugin : BaseUnityPlugin
             On.Player.ctor += Player_ctor;
             On.SlugcatStats.ctor += SlugcatStats_ctor;
             On.ProcessManager.PostSwitchMainProcess += ProcessManager_PostSwitchMainProcess;
-            On.Player.ShortCutColor += PlayerOnShortCutColor;
+            On.Player.ShortCutColor += Player_ShortCutColor;
             SlugcatSelectMenu.SlugcatPageContinue.ctor += SlugcatPageContinue_ctor;
             On.Player.FreeHand += Player_FreeHand;
             On.Player.SlugcatGrab += Player_SlugcatGrab;
-            On.Player.GrabUpdate += PlayerOnGrabUpdate;
+            On.Player.GrabUpdate += Player_GrabUpdate;
+            
 
             MachineConnector.SetRegisteredOI("elumenix.pupify", options);
             IsInit = true;
@@ -82,7 +83,9 @@ public class Plugin : BaseUnityPlugin
         }
     }
 
-    private void PlayerOnGrabUpdate(On.Player.orig_GrabUpdate orig, Player self, bool eu)
+   
+
+    private void Player_GrabUpdate(On.Player.orig_GrabUpdate orig, Player self, bool eu)
     {
         // Despite how important and long this base method is, this override is just to allow switching hands
         if (!options.onlyCosmetic.Value && options.bothHands.Value && self.SlugCatClass.value != "Slugpup")
@@ -120,6 +123,12 @@ public class Plugin : BaseUnityPlugin
         
         // This should run regardless, for both mod compatibility and to not plagiarize 900 lines of code
         orig(self, eu);
+
+        // Prevents player from using the stomach
+        if (!options.onlyCosmetic.Value && !options.letStomach.Value)
+        {
+            self.swallowAndRegurgitateCounter = 0;
+        }
     }
 
     private void Player_SlugcatGrab(On.Player.orig_SlugcatGrab orig, Player self, PhysicalObject obj, int graspUsed)
@@ -344,7 +353,7 @@ public class Plugin : BaseUnityPlugin
         }
     }
 
-    private Color PlayerOnShortCutColor(On.Player.orig_ShortCutColor orig, Player self)
+    private Color Player_ShortCutColor(On.Player.orig_ShortCutColor orig, Player self)
     {
         if (!options.onlyCosmetic.Value && currentSlugcat != null && self.SlugCatClass == currentSlugcat.name && !self.isNPC)
         {

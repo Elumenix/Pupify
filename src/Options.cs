@@ -18,14 +18,15 @@ public class Options : OptionInterface
         foodOption = config.Bind("foodOption", 0);
         statsOption = config.Bind("statsOption", 0);
         bothHands = config.Bind("bothHands", false);
-        
+        letStomach = config.Bind("letStomach", false);
     }
 
     public readonly Configurable<bool> onlyCosmetic;
     public readonly Configurable<int> foodOption;
     public readonly Configurable<int> statsOption;
     public readonly Configurable<bool> bothHands;
-    
+    public readonly Configurable<bool> letStomach;
+
 
     private UIelement[] UIArrPlayerOptions;
     private UIelement[] UIArrPlayerModify;
@@ -82,10 +83,15 @@ public class Options : OptionInterface
         {
             new OpLabel(10f, 570f, "Modify", true),
 				new OpRect(new Vector2(0f, 248f), new Vector2(257f, 305f), 0.3f),
-				new OpLabel(15f, 520f, "Stomach Items", false),
-				new OpLabel(15f, 460f, "Carnivorous Diet", false),
+				new OpLabel(15f, 500f, "Stomach Items", false),
+                new OpCheckBox(letStomach, 120f, 500f)
+                {
+                    description = "Access Stomach. Warning: Will trap current item in stomach"
+                },
+                
+				new OpLabel(15f, 440f, "Carnivorous Diet", false),
 				
-				new OpLabel(15f, 400f, "Maul Enemies", false),
+				new OpLabel(15f, 380f, "Mauling", false),
 				
 				
 				new OpRect(new Vector2(282f, 365f), new Vector2(260f, 188f), 0.3f),
