@@ -9,11 +9,9 @@ using Menu;
 using On.MoreSlugcats;
 using RWCustom;
 using UnityEngine;
-using static MoreSlugcats.SpeedRunTimer;
 using MenuLabel = Menu.MenuLabel;
 using MenuObject = Menu.MenuObject;
 using MoreSlugcatsEnums = MoreSlugcats.MoreSlugcatsEnums;
-using MouseCursor = On.Menu.MouseCursor;
 using SlugcatSelectMenu = On.Menu.SlugcatSelectMenu;
 
 #pragma warning disable CS0618
@@ -70,6 +68,9 @@ public class Plugin : BaseUnityPlugin
             On.ProcessManager.PostSwitchMainProcess += ProcessManager_PostSwitchMainProcess;
             On.Player.ShortCutColor += PlayerOnShortCutColor;
             SlugcatSelectMenu.SlugcatPageContinue.ctor += SlugcatPageContinue_ctor;
+            On.Player.FreeHand += Player_FreeHand;
+            On.Player.SlugcatGrab += Player_SlugcatGrab;
+            On.Player.GrabUpdate += PlayerOnGrabUpdate;
 
             MachineConnector.SetRegisteredOI("elumenix.pupify", options);
             IsInit = true;
@@ -81,7 +82,126 @@ public class Plugin : BaseUnityPlugin
         }
     }
 
-    
+    private void PlayerOnGrabUpdate(On.Player.orig_GrabUpdate orig, Player self, bool eu)
+    {
+        // Despite how important and long this base method is, this override is just to allow switching hands
+        if (!options.onlyCosmetic.Value && options.bothHands.Value && self.SlugCatClass.value != "Slugpup")
+        {
+            if (self.input[0].pckp && !self.input[1].pckp && self.switchHandsProcess == 0f)
+            {
+                bool handAvailable = self.grasps[0] != null || self.grasps[1] != null;
+                if (self.grasps[0] != null &&
+                    (self.Grabability(self.grasps[0].grabbed) == Player.ObjectGrabability.TwoHands ||
+                     self.Grabability(self.grasps[0].grabbed) == Player.ObjectGrabability.Drag))
+                {
+                    handAvailable = false;
+                }
+
+                if (handAvailable)
+                {
+                    if (self.switchHandsCounter == 0)
+                    {
+                        self.switchHandsCounter = 15;
+                    }
+                    else
+                    {
+                        self.room.PlaySound(SoundID.Slugcat_Switch_Hands_Init, self.mainBodyChunk);
+                        self.switchHandsProcess = 0.01f;
+                        self.wantToPickUp = 0;
+                        self.noPickUpOnRelease = 20;
+                    }
+                }
+                else
+                {
+                    self.switchHandsProcess = 0;
+                }
+            }
+        }
+        
+        // This should run regardless, for both mod compatibility and to not plagiarize 900 lines of code
+        orig(self, eu);
+    }
+
+    private void Player_SlugcatGrab(On.Player.orig_SlugcatGrab orig, Player self, PhysicalObject obj, int graspUsed)
+    {
+        // This override is so that the player may actually pick up an item into their second hand
+        if (!options.onlyCosmetic.Value && options.bothHands.Value && self.SlugCatClass.value != "Slugpup")
+        {
+            // Moon cloak code was apparently unreachable, so it was removed, hopefully that doesn't cause errors
+		    if (obj is IPlayerEdible && (!ModManager.MMF || obj is Creature {dead: true} || obj is not Centipede centipede || (centipede.Small)))
+		    {
+			    self.Grab(obj, graspUsed, 0, Creature.Grasp.Shareability.CanOnlyShareWithNonExclusive, 0.5f, false, true);
+		    }
+		    int chunkGrabbed = 0;
+		    if (self.Grabability(obj) == Player.ObjectGrabability.Drag)
+		    {
+			    float dst = float.MaxValue;
+			    for (int i = 0; i < obj.bodyChunks.Length; i++)
+			    {
+				    if (Custom.DistLess(self.mainBodyChunk.pos, obj.bodyChunks[i].pos, dst))
+				    {
+					    dst = Vector2.Distance(self.mainBodyChunk.pos, obj.bodyChunks[i].pos);
+					    chunkGrabbed = i;
+				    }
+			    }
+		    }
+		    self.switchHandsCounter = 0;
+		    self.wantToPickUp = 0;
+		    self.noPickUpOnRelease = 20;
+		    
+            // Removed slugpup grab limiter
+            
+		    bool flag = true;
+            if (obj is Creature creature)
+		    {
+			    if (self.IsCreatureImmuneToPlayerGrabStun(creature))
+			    {
+				    flag = false;
+			    }
+			    else if (!creature.dead && !self.IsCreatureLegalToHoldWithoutStun(creature))
+			    {
+				    flag = false;
+			    }
+		    }
+
+            self.Grab(obj, graspUsed, chunkGrabbed, Creature.Grasp.Shareability.CanOnlyShareWithNonExclusive, 0.5f, true,
+                (ModManager.MMF || ModManager.CoopAvailable) ? flag : obj is not Cicada && obj is not JetFish);
+        }
+        else
+        {
+            orig(self, obj, graspUsed);
+        }
+    }
+
+    private int Player_FreeHand(On.Player.orig_FreeHand orig, Player self)
+    {
+        // This override lets slugpups realize they have a second hand
+        if (!options.onlyCosmetic.Value && options.bothHands.Value && self.SlugCatClass.value != "Slugpup")
+        {
+            if (self.grasps[0] != null && self.HeavyCarry(self.grasps[0].grabbed))
+            {
+                return -1;
+            }
+
+            for (int i = 0; i < self.grasps.Length; i++)
+            {
+                // Normally this would be prevented for slugpups
+                if (self.grasps[i] == null)
+                {
+                    return i;
+                }
+            }
+
+            // Both hands occupied
+            return -1;
+        }
+        else
+        {
+            return orig(self);
+        }
+    }
+
+
     private void SlugcatPageContinue_ctor(SlugcatSelectMenu.SlugcatPageContinue.orig_ctor orig,
         Menu.SlugcatSelectMenu.SlugcatPageContinue self, Menu.Menu menu, MenuObject owner, int pageIndex,
         SlugcatStats.Name slugcatNumber)
@@ -105,7 +225,7 @@ public class Plugin : BaseUnityPlugin
             self.name = "Slugcat_Page_" + ((slugcatNumber != null) ? slugcatNumber.ToString() : null);
             self.index = pageIndex;
             self.selectables = new List<SelectableMenuObject>();
-            self.mouseCursor = new Menu.MouseCursor(menu, self, new Vector2(-100f, -100f));
+            self.mouseCursor = new MouseCursor(menu, self, new Vector2(-100f, -100f));
             self.subObjects.Add(self.mouseCursor);
             
             self.slugcatNumber = slugcatNumber;
@@ -226,7 +346,7 @@ public class Plugin : BaseUnityPlugin
 
     private Color PlayerOnShortCutColor(On.Player.orig_ShortCutColor orig, Player self)
     {
-        if (currentSlugcat != null && self.SlugCatClass == currentSlugcat.name && !self.isNPC)
+        if (!options.onlyCosmetic.Value && currentSlugcat != null && self.SlugCatClass == currentSlugcat.name && !self.isNPC)
         {
             return PlayerGraphics.SlugcatColor(currentSlugcat.name);
         }
@@ -236,7 +356,7 @@ public class Plugin : BaseUnityPlugin
 
     private void ProcessManager_PostSwitchMainProcess(On.ProcessManager.orig_PostSwitchMainProcess orig, ProcessManager self, ProcessManager.ProcessID ID) 
     {
-        if (ID == ProcessManager.ProcessID.Game)
+        if (!options.onlyCosmetic.Value && ID == ProcessManager.ProcessID.Game)
         {
             // Allow game to set up starving values
             currentSlugcat = null;
@@ -406,6 +526,8 @@ public class Plugin : BaseUnityPlugin
     {
         orig(self, eu);
 
+        if (options.onlyCosmetic.Value) return;
+        
         // Makes sure that spearmaster doesn't spawn with more food than a pup should have
         // which would cause an out of range error upon the first time eating, strictly on cycle 0
         foreach (var t in self.room.game.Players)

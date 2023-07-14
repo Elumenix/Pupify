@@ -17,22 +17,30 @@ public class Options : OptionInterface
         onlyCosmetic = config.Bind("onlyCosmetic", false);
         foodOption = config.Bind("foodOption", 0);
         statsOption = config.Bind("statsOption", 0);
+        bothHands = config.Bind("bothHands", false);
+        
     }
 
     public readonly Configurable<bool> onlyCosmetic;
     public readonly Configurable<int> foodOption;
     public readonly Configurable<int> statsOption;
+    public readonly Configurable<bool> bothHands;
+    
+
     private UIelement[] UIArrPlayerOptions;
+    private UIelement[] UIArrPlayerModify;
     private OpRadioButtonGroup foodGroup;
     private OpRadioButtonGroup statGroup;
-    
-    
+
+
     public override void Initialize()
     {
         var opTab = new OpTab(this, "Options");
-        this.Tabs = new[]
+        var modifyTab = new OpTab(this, "Modify");
+        Tabs = new[]
         {
-            opTab
+            opTab,
+            modifyTab
         };
 
         // I would have loved any sort of documentation to figure this out
@@ -69,13 +77,36 @@ public class Options : OptionInterface
             new OpLabel(10, 400, "Great! You don't need any other options.", true){color = new Color(0.85f,0.2f,0.4f)}
         };
         opTab.AddItems(UIArrPlayerOptions);
+
+        UIArrPlayerModify = new UIelement[]
+        {
+            new OpLabel(10f, 570f, "Modify", true),
+				new OpRect(new Vector2(0f, 248f), new Vector2(257f, 305f), 0.3f),
+				new OpLabel(15f, 520f, "Stomach Items", false),
+				new OpLabel(15f, 460f, "Carnivorous Diet", false),
+				
+				new OpLabel(15f, 400f, "Maul Enemies", false),
+				
+				
+				new OpRect(new Vector2(282f, 365f), new Vector2(260f, 188f), 0.3f),
+				new OpLabel(295f, 510f, "Slugpups generally lose access \nto major abilities. \nThey can be re-enabled here.", false),
+
+
+				
+				
+				new OpRect(new Vector2(282f, 223f), new Vector2(195f, 105f), 0.3f),
+				new OpCheckBox(bothHands, new Vector2(360f, 260f))
+				{
+					description = "Unlock the use of your second set of digits."
+				},
+				new OpLabel(298f, 295f, "Allow Two Hands", true),
+        };
+        modifyTab.AddItems(UIArrPlayerModify);
     }
 
     public override void Update()
     {
-        Debug.Log(statsOption.Value);
-        
-        if (((OpCheckBox)UIArrPlayerOptions[2]).GetValueBool())
+	    if (((OpCheckBox)UIArrPlayerOptions[2]).GetValueBool())
         {
             for (int i = 3; i < UIArrPlayerOptions.Length; i++)
             {
