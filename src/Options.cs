@@ -14,14 +14,17 @@ public class Options : OptionInterface
     public Options(Plugin modInstance, ManualLogSource loggerSource)
     {
         Logger = loggerSource;
-        onlyCosmetic = this.config.Bind<bool>("onlyCosmetic", false);
-        foodOption = this.config.Bind<int>("foodOption", 0);
+        onlyCosmetic = config.Bind("onlyCosmetic", false);
+        foodOption = config.Bind("foodOption", 0);
+        statsOption = config.Bind("statsOption", 0);
     }
 
     public readonly Configurable<bool> onlyCosmetic;
     public readonly Configurable<int> foodOption;
+    public readonly Configurable<int> statsOption;
     private UIelement[] UIArrPlayerOptions;
     private OpRadioButtonGroup foodGroup;
+    private OpRadioButtonGroup statGroup;
     
     
     public override void Initialize()
@@ -35,7 +38,9 @@ public class Options : OptionInterface
         // I would have loved any sort of documentation to figure this out
         foodGroup = new OpRadioButtonGroup(foodOption);
         foodGroup.SetButtons(new OpRadioButton[] {new(100f, 420f), new(300f, 420f), new(500f, 420f)});
-        
+        statGroup = new OpRadioButtonGroup(statsOption);
+        statGroup.SetButtons(new OpRadioButton[] {new(100f, 320f), new(300f, 320f), new(500f, 320f)});
+
         
         UIArrPlayerOptions = new UIelement[]
         {
@@ -45,22 +50,30 @@ public class Options : OptionInterface
             
             new OpLabel(10f, 450f, "Food Values:", true),
             new OpLabel(50f, 420f, "Scaled"),
-            foodGroup, // Config button shows up on this one but options still don't apply
+            foodGroup, 
             foodGroup.buttons[0],
-            new OpLabel(225, 420, "Base Game"),
+            new OpLabel(225f, 420f, "Base Game"),
             foodGroup.buttons[1],
-            new OpLabel(440, 420, "Slugpup"),
+            new OpLabel(440f, 420f, "Slugpup"),
             foodGroup.buttons[2],
-
-
-            new OpLabel(10, 400, "Great! You don't need all these other options now.", true){color = new Color(0.85f,0.2f,0.4f)}
+            statGroup,
+            statGroup.buttons[0],
+            statGroup.buttons[1],
+            statGroup.buttons[2],
+            new OpLabel(10f, 350f, "Stat Values:", true),
+            new OpLabel(50f, 320f, "Scaled"),
+            new OpLabel(225f, 320f, "Base Game"),
+            new OpLabel(440f, 320f, "Slugpup"),
+            
+            
+            new OpLabel(10, 400, "Great! You don't need any other options.", true){color = new Color(0.85f,0.2f,0.4f)}
         };
         opTab.AddItems(UIArrPlayerOptions);
     }
 
     public override void Update()
     {
-        Debug.Log(foodOption.Value);
+        Debug.Log(statsOption.Value);
         
         if (((OpCheckBox)UIArrPlayerOptions[2]).GetValueBool())
         {

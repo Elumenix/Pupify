@@ -67,10 +67,9 @@ public class Plugin : BaseUnityPlugin
             On.GameSession.ctor += GameSession_ctor;
             On.Player.ctor += Player_ctor;
             On.SlugcatStats.ctor += SlugcatStats_ctor;
-            On.Player.Update += Player_Update;
             On.ProcessManager.PostSwitchMainProcess += ProcessManager_PostSwitchMainProcess;
             On.Player.ShortCutColor += PlayerOnShortCutColor;
-            On.Menu.SlugcatSelectMenu.SlugcatPageContinue.ctor += SlugcatPageContinue_ctor;
+            SlugcatSelectMenu.SlugcatPageContinue.ctor += SlugcatPageContinue_ctor;
 
             MachineConnector.SetRegisteredOI("elumenix.pupify", options);
             IsInit = true;
@@ -82,12 +81,11 @@ public class Plugin : BaseUnityPlugin
         }
     }
 
+    
     private void SlugcatPageContinue_ctor(SlugcatSelectMenu.SlugcatPageContinue.orig_ctor orig,
         Menu.SlugcatSelectMenu.SlugcatPageContinue self, Menu.Menu menu, MenuObject owner, int pageIndex,
         SlugcatStats.Name slugcatNumber)
     {
-        // TODO: add subsequent options for other food meter styles
-
         if (options.onlyCosmetic.Value)
         {
             orig(self, menu, owner, pageIndex, slugcatNumber);
@@ -247,21 +245,6 @@ public class Plugin : BaseUnityPlugin
         orig(self, ID);
     }
 
-    private void Player_Update(On.Player.orig_Update orig, Player self, bool eu)
-    {
-        orig(self, eu);
-        
-        Debug.Log("RunSpeed: " + self.slugcatStats.runspeedFac);
-        Debug.Log("BodyWeight: " + self.slugcatStats.bodyWeightFac);
-        Debug.Log("GeneralVisibility: " + self.slugcatStats.generalVisibilityBonus);
-        Debug.Log("VisualStealth: " + self.slugcatStats.visualStealthInSneakMode);
-        Debug.Log("Loudness: " + self.slugcatStats.loudnessFac);
-        Debug.Log("LungsFac: " + self.slugcatStats.lungsFac);
-        Debug.Log("ThrowingSkill: " + self.slugcatStats.throwingSkill);
-        Debug.Log("PoleClimbSpeed: " + self.slugcatStats.poleClimbSpeedFac);
-        Debug.Log("CorridorClimbSpeed: " + self.slugcatStats.corridorClimbSpeedFac);
-    }
-
     private void SlugcatStats_ctor(On.SlugcatStats.orig_ctor orig, SlugcatStats self, SlugcatStats.Name slugcat, bool malnourished)
     {
         // this will correct body color changes
@@ -307,45 +290,93 @@ public class Plugin : BaseUnityPlugin
                 self.foodToHibernate = currentSlugcat.foodToHibernate;
                 self.maxFood = currentSlugcat.maxFood;
             }
-        }
 
-        // Stat adjustment option
-        if (true)
-        {
-            // second condition is added in case food was also adjusted
-            if (currentSlugcat == null || currentSlugcat == self)
+
+            // Stat adjustment option
+            if (options.statsOption.Value == 0) // Calculated
             {
-                currentSlugcat = self;
-                
-                // Stat adjustments
-                self.runspeedFac = currentSlugcat.runspeedFac * .8f * (.8f / .84f); // NPCStats interferes
-                self.bodyWeightFac = currentSlugcat.bodyWeightFac * .65f * (.65f / .63375f); // NPCStats interferes
-                self.generalVisibilityBonus = currentSlugcat.generalVisibilityBonus - .2f; // Very simple adjustment
-                self.visualStealthInSneakMode = currentSlugcat.visualStealthInSneakMode * 1.2f; // Alternative was +.1f, but I thought scaling was better
-                self.loudnessFac = currentSlugcat.loudnessFac * .5f; // Probably the simplest to think about
-                self.lungsFac = currentSlugcat.lungsFac * .8f; // This is the only improvement, all slugpups have better lung capacities 
-                self.poleClimbSpeedFac = currentSlugcat.poleClimbSpeedFac * .8f * (.8f / .836f); // NPCStats interferes
-                self.corridorClimbSpeedFac = currentSlugcat.corridorClimbSpeedFac * .8f * (.8f / .84f); // NPCStats interferes
-
-                // This is a weird one because it's such a big difference, but it is only an int and doesn't vary much
-                self.throwingSkill = currentSlugcat.throwingSkill - 1;
-                if (self.throwingSkill < 0)
+                // second condition is added in case food was also adjusted
+                if (currentSlugcat == null || currentSlugcat == self)
                 {
-                    self.throwingSkill = 0;
+                    currentSlugcat = self;
+
+                    // Stat adjustments
+                    self.runspeedFac = currentSlugcat.runspeedFac * .8f * (.8f / .84f); // NPCStats interferes
+                    self.bodyWeightFac = currentSlugcat.bodyWeightFac * .65f * (.65f / .63375f); // NPCStats interferes
+                    self.generalVisibilityBonus = currentSlugcat.generalVisibilityBonus - .2f; // Very simple adjustment
+                    self.visualStealthInSneakMode =
+                        currentSlugcat.visualStealthInSneakMode *
+                        1.2f; // Alternative was +.1f, but I thought scaling was better
+                    self.loudnessFac = currentSlugcat.loudnessFac * .5f; // Probably the simplest to think about
+                    self.lungsFac =
+                        currentSlugcat.lungsFac *
+                        .8f; // This is the only improvement, all slugpups have better lung capacities 
+                    self.poleClimbSpeedFac =
+                        currentSlugcat.poleClimbSpeedFac * .8f * (.8f / .836f); // NPCStats interferes
+                    self.corridorClimbSpeedFac =
+                        currentSlugcat.corridorClimbSpeedFac * .8f * (.8f / .84f); // NPCStats interferes
+
+                    // This is a weird one because it's such a big difference, but it is only an int and doesn't vary much
+                    self.throwingSkill = currentSlugcat.throwingSkill - 1;
+                    if (self.throwingSkill < 0)
+                    {
+                        self.throwingSkill = 0;
+                    }
+                }
+                else
+                {
+                    // Apply all values to pup
+                    self.runspeedFac = currentSlugcat.runspeedFac;
+                    self.bodyWeightFac = currentSlugcat.bodyWeightFac;
+                    self.generalVisibilityBonus = currentSlugcat.generalVisibilityBonus;
+                    self.visualStealthInSneakMode = currentSlugcat.visualStealthInSneakMode;
+                    self.loudnessFac = currentSlugcat.loudnessFac;
+                    self.lungsFac = currentSlugcat.lungsFac;
+                    self.poleClimbSpeedFac = currentSlugcat.poleClimbSpeedFac;
+                    self.corridorClimbSpeedFac = currentSlugcat.corridorClimbSpeedFac;
+                    self.throwingSkill = currentSlugcat.throwingSkill;
                 }
             }
-            else
+            else if (options.statsOption.Value == 1) // Original
             {
-                // Apply all values to pup
-                self.runspeedFac = currentSlugcat.runspeedFac;
-                self.bodyWeightFac = currentSlugcat.bodyWeightFac;
-                self.generalVisibilityBonus = currentSlugcat.generalVisibilityBonus;
-                self.visualStealthInSneakMode = currentSlugcat.visualStealthInSneakMode;
-                self.loudnessFac = currentSlugcat.loudnessFac;
-                self.lungsFac = currentSlugcat.lungsFac;
-                self.poleClimbSpeedFac = currentSlugcat.poleClimbSpeedFac;
-                self.corridorClimbSpeedFac = currentSlugcat.corridorClimbSpeedFac;
-                self.throwingSkill = currentSlugcat.throwingSkill;
+                if (currentSlugcat == null || currentSlugcat == self)
+                {
+                    currentSlugcat = self;
+
+                    // Stat adjustments, just offset npcStats adjustment
+                    self.runspeedFac *= (.8f / .84f); 
+                    self.bodyWeightFac *= (.65f / .63375f);
+                    self.poleClimbSpeedFac *= (.8f / .836f); 
+                    self.corridorClimbSpeedFac *= (.8f / .84f);
+                }
+                else
+                {
+                    // Apply all values to pup
+                    self.runspeedFac = currentSlugcat.runspeedFac;
+                    self.bodyWeightFac = currentSlugcat.bodyWeightFac;
+                    self.generalVisibilityBonus = currentSlugcat.generalVisibilityBonus;
+                    self.visualStealthInSneakMode = currentSlugcat.visualStealthInSneakMode;
+                    self.loudnessFac = currentSlugcat.loudnessFac;
+                    self.lungsFac = currentSlugcat.lungsFac;
+                    self.poleClimbSpeedFac = currentSlugcat.poleClimbSpeedFac;
+                    self.corridorClimbSpeedFac = currentSlugcat.corridorClimbSpeedFac;
+                    self.throwingSkill = currentSlugcat.throwingSkill;
+                }
+            }
+            else // Pup Route
+            {
+                if (currentSlugcat == null || currentSlugcat == self)
+                {
+                    currentSlugcat = self;
+                }
+                else
+                {
+                    // Essentially default values are used, this combats npcStats constructor changing player values
+                    self.runspeedFac *= (.8f / .84f); 
+                    self.bodyWeightFac *= (.65f / .63375f);
+                    self.poleClimbSpeedFac *= (.8f / .836f); 
+                    self.corridorClimbSpeedFac *= (.8f / .84f);
+                }
             }
         }
     }
