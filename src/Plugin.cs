@@ -156,11 +156,10 @@ public class Plugin : BaseUnityPlugin
                 new IntVector2(self.saveGameData.karma, self.saveGameData.karmaCap),
                 self.saveGameData.karmaReinforced));
 
-            // TODO: other options
             // The strategy here is to just completely redo the calculation each time because it's inexpensive
             // and also prevents me from needing to deal with several edge cases related to changing save files
             // whenever the food option on the mod is changed
-            if (true)
+            if (options.foodOption.Value == 0) // Calculated values
             {
                 float percentRequired = (float) SlugcatStats.SlugcatFoodMeter(slugcatNumber).y /
                                         SlugcatStats.SlugcatFoodMeter(slugcatNumber).x;
@@ -173,14 +172,13 @@ public class Plugin : BaseUnityPlugin
                     foodToHibernate = maxFood;
                 }
                 
-                // TODO: seems important for changes, don't forget it
                 // Hopefully this prevents circles from filling in past the bar
                 self.saveGameData.food =
                     Custom.IntClamp(self.saveGameData.food, 0, maxFood - foodToHibernate);
                 
                 self.hud.AddPart(new FoodMeter(self.hud, maxFood, foodToHibernate));
             }
-            else if (true)
+            else if (options.foodOption.Value == 1) // orig values
             {
                 // original method Default food stats
 
@@ -189,7 +187,7 @@ public class Plugin : BaseUnityPlugin
                 self.hud.AddPart(new FoodMeter(self.hud, SlugcatStats.SlugcatFoodMeter(slugcatNumber).x,
                     SlugcatStats.SlugcatFoodMeter(slugcatNumber).y));
             }
-            else
+            else // Pup values
             {
                 // Third thing where locked to pup
                 self.saveGameData.food = Custom.IntClamp(self.saveGameData.food, 0,
@@ -281,17 +279,27 @@ public class Plugin : BaseUnityPlugin
             if (currentSlugcat == null)
             {
                 currentSlugcat = self;
-                
-                float percentRequired = (float)self.foodToHibernate / self.maxFood;
-                self.maxFood = Mathf.RoundToInt(self.maxFood * (3f / 7f));
-                self.foodToHibernate =
-                    Mathf.RoundToInt(self.maxFood * percentRequired * (7f / 6f));
-            
-                // This may happen with a custom slugcat with ludicrously high food values
-                if (self.foodToHibernate > self.maxFood)
+
+                if (options.foodOption.Value == 0) // Calculated
                 {
-                    self.foodToHibernate = self.maxFood;
+                    float percentRequired = (float) self.foodToHibernate / self.maxFood;
+                    self.maxFood = Mathf.RoundToInt(self.maxFood * (3f / 7f));
+                    self.foodToHibernate =
+                        Mathf.RoundToInt(self.maxFood * percentRequired * (7f / 6f));
+
+
+                    // This may happen with a custom slugcat with ludicrously high food values
+                    if (self.foodToHibernate > self.maxFood)
+                    {
+                        self.foodToHibernate = self.maxFood;
+                    }
                 }
+                else if (options.foodOption.Value == 2) // Pup
+                {
+                    self.foodToHibernate = 2;
+                    self.maxFood = 3;
+                }
+                // Else, don't override the value : Original
             }
             else
             {
