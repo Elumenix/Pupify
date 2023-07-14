@@ -71,6 +71,7 @@ public class Plugin : BaseUnityPlugin
             On.Player.FreeHand += Player_FreeHand;
             On.Player.SlugcatGrab += Player_SlugcatGrab;
             On.Player.GrabUpdate += Player_GrabUpdate;
+            On.MoreSlugcats.CutsceneArtificer.Update += CutsceneArtificer_Update;
             
 
             MachineConnector.SetRegisteredOI("elumenix.pupify", options);
@@ -83,7 +84,16 @@ public class Plugin : BaseUnityPlugin
         }
     }
 
-   
+    private void CutsceneArtificer_Update(CutsceneArtificer.orig_Update orig, MoreSlugcats.CutsceneArtificer self, bool eu)
+    {
+        orig(self, eu);
+        
+        // Artificers opening cutscene attempts to add max food after you exit and reopen cycle 0
+        if (self.player is {playerState: not null})
+        {
+            self.player.playerState.foodInStomach = 0;
+        }
+    }
 
     private void Player_GrabUpdate(On.Player.orig_GrabUpdate orig, Player self, bool eu)
     {
@@ -124,10 +134,24 @@ public class Plugin : BaseUnityPlugin
         // This should run regardless, for both mod compatibility and to not plagiarize 900 lines of code
         orig(self, eu);
 
-        // Prevents player from using the stomach
-        if (!options.onlyCosmetic.Value && !options.letStomach.Value)
+        // Prevents player from using the stomach whatsoever
+        if (!options.onlyCosmetic.Value && !options.letStomach.Value && !options.letMaul.Value)
         {
             self.swallowAndRegurgitateCounter = 0;
+        }
+        else if (!options.onlyCosmetic.Value)
+        {
+            // Allows stomach use while maul is active
+            if (!options.letStomach.Value && self.maulTimer == 0)
+            {
+                // prevents normal stomach only
+                self.swallowAndRegurgitateCounter = 0;
+            }
+            else if (!options.letMaul.Value) // Player only isn't allowed to maul
+            {
+                // only stops mauling
+                self.maulTimer = 0;
+            }
         }
     }
 

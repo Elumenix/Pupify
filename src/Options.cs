@@ -19,6 +19,7 @@ public class Options : OptionInterface
         statsOption = config.Bind("statsOption", 0);
         bothHands = config.Bind("bothHands", false);
         letStomach = config.Bind("letStomach", false);
+        letMaul = config.Bind("letMaul", false);
     }
 
     public readonly Configurable<bool> onlyCosmetic;
@@ -26,6 +27,7 @@ public class Options : OptionInterface
     public readonly Configurable<int> statsOption;
     public readonly Configurable<bool> bothHands;
     public readonly Configurable<bool> letStomach;
+    public readonly Configurable<bool> letMaul;
 
 
     private UIelement[] UIArrPlayerOptions;
@@ -86,12 +88,16 @@ public class Options : OptionInterface
 				new OpLabel(15f, 500f, "Stomach Items", false),
                 new OpCheckBox(letStomach, 120f, 500f)
                 {
-                    description = "Access Stomach. Warning: Will trap current item in stomach"
+                    description = "Access Stomach for storage & crafting. \nWarning: Will trap current item in stomach if turned off."
                 },
                 
 				new OpLabel(15f, 440f, "Carnivorous Diet", false),
 				
 				new OpLabel(15f, 380f, "Mauling", false),
+                new OpCheckBox(letMaul, 120f, 380f)
+                {
+                  description  = "This kitty(slug) has claws."
+                },
 				
 				
 				new OpRect(new Vector2(282f, 365f), new Vector2(260f, 188f), 0.3f),
