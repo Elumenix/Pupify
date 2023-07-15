@@ -91,38 +91,83 @@ public class Plugin : BaseUnityPlugin
         // Hunter's intro, which attempts to fill his food meter past the bar on cycle 0
         orig(self);
 
+        if (options.onlyCosmetic.Value) return;
+        
         if (self.room.game.Players[0].realizedCreature is Player {playerState: not null} player)
         {
-            player.playerState.foodInStomach = 0;
+            player.playerState.foodInStomach = options.foodOption.Value switch
+            {
+                // Hunter is designed to start 1 food short of being able to hibernate first cycle
+                0 => 2,
+                1 => 5,
+                2 => 1,
+                _ => 0
+            };
         }
     }
 
     private bool Player_CanEatMeat(On.Player.orig_CanEatMeat orig, Player self, Creature crit)
     {
-        if (ModManager.MSC && (self.SlugCatClass == MoreSlugcatsEnums.SlugcatStatsName.Saint || self.SlugCatClass == MoreSlugcatsEnums.SlugcatStatsName.Spear))
+        if (!options.onlyCosmetic.Value)
         {
-            return false;
-        }
-        if (self.EatMeatOmnivoreGreenList(crit) && crit.dead)
-        {
-            return !ModManager.MSC || self.pyroJumpCooldown <= 60f;
-        }
-        
-        Debug.Log(!(crit is IPlayerEdible));
-        Debug.Log(crit.dead);
-        Debug.Log(self.slugcatStats.name == MoreSlugcatsEnums.SlugcatStatsName.Artificer);
-        Debug.Log(!ModManager.CoopAvailable || crit is not Player);
-        Debug.Log((!ModManager.MSC || self.pyroJumpCooldown <= 60f));
+            if (ModManager.MSC && (self.SlugCatClass == MoreSlugcatsEnums.SlugcatStatsName.Saint ||
+                                   self.SlugCatClass == MoreSlugcatsEnums.SlugcatStatsName.Spear))
+            {
+                return false;
+            }
 
-        return options.letEatMeat.Value && (orig(self, crit) || (!(crit is IPlayerEdible) && crit.dead && (self.SlugCatClass == SlugcatStats.Name.Red || (ModManager.MSC && (self.SlugCatClass == MoreSlugcatsEnums.SlugcatStatsName.Artificer || self.SlugCatClass == MoreSlugcatsEnums.SlugcatStatsName.Gourmand || self.SlugCatClass == MoreSlugcatsEnums.SlugcatStatsName.Sofanthiel))) && (!ModManager.CoopAvailable || !(crit is Player)) && (!ModManager.MSC || self.pyroJumpCooldown <= 60f)));
+            if (self.EatMeatOmnivoreGreenList(crit) && crit.dead)
+            {
+                return !ModManager.MSC || self.pyroJumpCooldown <= 60f;
+            }
+
+            Debug.Log(!(crit is IPlayerEdible));
+            Debug.Log(crit.dead);
+            Debug.Log(self.slugcatStats.name == MoreSlugcatsEnums.SlugcatStatsName.Artificer);
+            Debug.Log(!ModManager.CoopAvailable || crit is not Player);
+            Debug.Log((!ModManager.MSC || self.pyroJumpCooldown <= 60f));
+
+            return options.letEatMeat.Value && (orig(self, crit) || (!(crit is IPlayerEdible) && crit.dead &&
+                                                                     (self.SlugCatClass == SlugcatStats.Name.Red ||
+                                                                      (ModManager.MSC &&
+                                                                       (self.SlugCatClass ==
+                                                                        MoreSlugcatsEnums.SlugcatStatsName
+                                                                            .Artificer ||
+                                                                        self.SlugCatClass ==
+                                                                        MoreSlugcatsEnums.SlugcatStatsName
+                                                                            .Gourmand ||
+                                                                        self.SlugCatClass ==
+                                                                        MoreSlugcatsEnums.SlugcatStatsName
+                                                                            .Sofanthiel))) &&
+                                                                     (!ModManager.CoopAvailable || !(crit is Player)) &&
+                                                                     (!ModManager.MSC ||
+                                                                      self.pyroJumpCooldown <= 60f)));
+        }
+        else
+        {
+            return orig(self, crit);
+        }
     }
 
     private void CutsceneArtificer_Update(CutsceneArtificer.orig_Update orig, MoreSlugcats.CutsceneArtificer self, bool eu)
     {
         orig(self, eu);
+
+        if (options.onlyCosmetic.Value) return;
+        if (self.room.game.Players[0].realizedCreature is not Player {playerState: not null}) return;
         
-        // Artificers opening cutscene attempts to add max food after you exit and reopen cycle 0
-        if (self.player is {playerState: not null})
+        // Artificer is meant to start if 4 food pips, however this is because she eats a scavenger in a cutscene
+        // This of course can only happen if she has the ability to eat meat
+        if (options.letEatMeat.Value)
+        {
+            // The cutscene needs to handle this part if this is the opening; This check makes sure this isn't the cutscene
+            if (!(self.player.myRobot == null || self.player.myRobot != null && self.room.world.rainCycle.timer >= 400))
+            {
+                // Don't make pup meter go past 4 though
+                self.player.playerState.foodInStomach = options.foodOption.Value != 2 ? 4 : 3;
+            }
+        }
+        else
         {
             self.player.playerState.foodInStomach = 0;
         }
@@ -360,6 +405,13 @@ public class Plugin : BaseUnityPlugin
                 self.saveGameData.food =
                     Custom.IntClamp(self.saveGameData.food, 0, maxFood - foodToHibernate);
                 
+                // Specific edge case that result from artificer being allowed a cycle 0 save
+                if (slugcatNumber == MoreSlugcatsEnums.SlugcatStatsName.Artificer && options.letEatMeat.Value &&
+                    self.saveGameData.cycle == 0)
+                {
+                    self.saveGameData.food = 4;
+                }
+                
                 self.hud.AddPart(new FoodMeter(self.hud, maxFood, foodToHibernate));
             }
             else if (options.foodOption.Value == 1) // orig values
@@ -368,6 +420,15 @@ public class Plugin : BaseUnityPlugin
 
                 self.saveGameData.food = Custom.IntClamp(self.saveGameData.food, 0,
                     SlugcatStats.SlugcatFoodMeter(slugcatNumber).y);
+                
+                // Specific edge case that result from artificer being allowed a cycle 0 save
+                if (slugcatNumber == MoreSlugcatsEnums.SlugcatStatsName.Artificer && options.letEatMeat.Value &&
+                    self.saveGameData.cycle == 0)
+                {
+                    self.saveGameData.food = 4;
+                }
+                
+                
                 self.hud.AddPart(new FoodMeter(self.hud, SlugcatStats.SlugcatFoodMeter(slugcatNumber).x,
                     SlugcatStats.SlugcatFoodMeter(slugcatNumber).y));
             }
@@ -376,9 +437,18 @@ public class Plugin : BaseUnityPlugin
                 // Third thing where locked to pup
                 self.saveGameData.food = Custom.IntClamp(self.saveGameData.food, 0,
                     1);
+                
+                // Specific edge case that result from artificer being allowed a cycle 0 save
+                if (slugcatNumber == MoreSlugcatsEnums.SlugcatStatsName.Artificer && options.letEatMeat.Value &&
+                    self.saveGameData.cycle == 0)
+                {
+                    self.saveGameData.food = 3;
+                }
+                
                 self.hud.AddPart(new FoodMeter(self.hud, 3,
                     2));
             }
+            
             
 
             string text = "";
@@ -596,14 +666,16 @@ public class Plugin : BaseUnityPlugin
         
         // Makes sure that spearmaster doesn't spawn with more food than a pup should have
         // which would cause an out of range error upon the first time eating, strictly on cycle 0
-        foreach (var t in self.room.game.Players)
+        if (self.room.game.Players[0].realizedCreature is Player {playerState: not null} player)
         {
-            if ((t.realizedCreature as Player)?.SlugCatClass ==
-                MoreSlugcatsEnums.SlugcatStatsName.Spear)
+            player.playerState.foodInStomach = options.foodOption.Value switch
             {
-                // Override so that spearmaster doesn't start with more food than they can hold, which would crash the game
-                ((Player) t.realizedCreature).playerState.foodInStomach = 0;
-            }
+                // Spearmaster is designed to start 1 food short of being able to hibernate first cycle
+                0 => 1,
+                1 => 4,
+                2 => 1,
+                _ => 0
+            };
         }
     }
 
