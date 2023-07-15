@@ -74,6 +74,7 @@ public class Plugin : BaseUnityPlugin
             CutsceneArtificer.Update += CutsceneArtificer_Update;
             On.Player.CanEatMeat += Player_CanEatMeat;
             On.HardmodeStart.SinglePlayerUpdate += HardmodeStart_SinglePlayerUpdate;
+            On.PlayerGraphics.DrawSprites += PlayerGraphics_DrawSprites;
             
 
             MachineConnector.SetRegisteredOI("elumenix.pupify", options);
@@ -83,6 +84,60 @@ public class Plugin : BaseUnityPlugin
         {
             Logger.LogError(ex);
             throw;
+        }
+    }
+
+    private void PlayerGraphics_DrawSprites(On.PlayerGraphics.orig_DrawSprites orig, PlayerGraphics self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
+    {
+        orig(self, sLeaser, rCam, timeStacker, camPos);
+        
+        // This should always happen, because render as pup is the thing that causes it
+        // I'm using the same variable names as the decompiled dll to give an idea of position and how much code I'm skipping
+        if (self.player.SlugCatClass == MoreSlugcatsEnums.SlugcatStatsName.Saint)
+        {
+            float num = 0.5f +
+                        0.5f * Mathf.Sin(Mathf.Lerp(self.lastBreath, self.breath, timeStacker) * 3.1415927f * 2f);
+
+            Vector2 vector = Vector2.Lerp(self.drawPositions[0, 1], self.drawPositions[0, 0], timeStacker);
+            Vector2 vector2 = Vector2.Lerp(self.drawPositions[1, 1], self.drawPositions[1, 0], timeStacker);
+            Vector2 vector3 = Vector2.Lerp(self.head.lastPos, self.head.pos, timeStacker);
+            
+            if (self.player.aerobicLevel > 0.5f)
+            {
+                vector += Custom.DirVec(vector2, vector) * Mathf.Lerp(-1f, 1f, num) *
+                          Mathf.InverseLerp(0.5f, 1f, self.player.aerobicLevel) * 0.5f;
+                vector3 -= Custom.DirVec(vector2, vector) * Mathf.Lerp(-1f, 1f, num) *
+                           Mathf.Pow(Mathf.InverseLerp(0.5f, 1f, self.player.aerobicLevel), 1.5f) * 0.75f;
+            }
+
+            float num3 = Custom.AimFromOneVectorToAnother(Vector2.Lerp(vector2, vector, 0.5f), vector3);
+            int num4 = Mathf.RoundToInt((Mathf.Abs(num3 / 360f * 34f)));
+            
+            if (self.player.sleepCurlUp > 0f)
+            {
+                num4 = 7;
+                num4 = Custom.IntClamp((int)Mathf.Lerp(num4, 4f, self.player.sleepCurlUp), 0, 8);
+            }
+            
+            // each if statement from hereon is checking the conditions of several blocks to figure out if num4 changes
+            if (self.player.sleepCurlUp <= 0 && self.owner.room != null && self.owner.EffectiveRoomGravity == 0f)
+            {
+                num4 = 0;
+            }
+            else if (self.player.Consious)
+            {
+                if ((self.player.bodyMode == Player.BodyModeIndex.Stand && self.player.input[0].x != 0) ||
+                    self.player.bodyMode == Player.BodyModeIndex.Crawl)
+                {
+                    num4 = self.player.bodyMode == Player.BodyModeIndex.Crawl ? 7 : 6;
+                }
+            }
+            else
+            {
+                num4 = 0;
+            }
+
+            sLeaser.sprites[3].element = Futile.atlasManager.GetElementWithName("HeadB" + num4);
         }
     }
 
