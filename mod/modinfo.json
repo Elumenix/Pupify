@@ -3,7 +3,7 @@
   "name": "Pupify",
   "version": "1.0.0",
   "authors": "Elumenix",
-  "description": "Play as your favorite slugs in their adolescence!",
+  "description": "Time for some slugpup campaigns!",
   "requirements": ["moreslugcats"],
   "requirements_names": ["More Slugcats Expansion"],
   "checksum_override_version": true
