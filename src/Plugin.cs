@@ -576,6 +576,8 @@ public class Plugin : BaseUnityPlugin
 
                 if (options.foodOption.Value == 0) // Calculated
                 {
+                    // Malnourishment has already been accounted for at this point
+                    
                     float percentRequired = (float) self.foodToHibernate / self.maxFood;
                     self.maxFood = Mathf.RoundToInt(self.maxFood * (3f / 7f));
                     self.foodToHibernate =
@@ -590,14 +592,24 @@ public class Plugin : BaseUnityPlugin
                 }
                 else if (options.foodOption.Value == 2) // Pup
                 {
-                    self.foodToHibernate = 2;
-                    self.maxFood = 3;
+                    // This doesn't use previous values, so malnourished 
+                    // needs to be hard-coded
+                    if (malnourished)
+                    {
+                        self.foodToHibernate = 3;
+                        self.maxFood = 3;
+                    }
+                    else
+                    {
+                        self.foodToHibernate = 2;
+                        self.maxFood = 3;
+                    }
                 }
                 // Else, don't override the value : Original
             }
             else
             {
-                // Don't override the slugpup
+                // Don't override the slugpup : malnourishment already calculated
                 self.foodToHibernate = currentSlugcat.foodToHibernate;
                 self.maxFood = currentSlugcat.maxFood;
             }
