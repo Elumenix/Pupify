@@ -6,12 +6,14 @@ using BepInEx;
 using HarmonyLib;
 using HUD;
 using Menu;
-using On.MoreSlugcats;
+using MoreSlugcats;
 using RWCustom;
 using UnityEngine;
+using CutsceneArtificer = On.MoreSlugcats.CutsceneArtificer;
 using MenuLabel = Menu.MenuLabel;
 using MenuObject = Menu.MenuObject;
 using MoreSlugcatsEnums = MoreSlugcats.MoreSlugcatsEnums;
+using MSCRoomSpecificScript = On.MoreSlugcats.MSCRoomSpecificScript;
 using SlugcatSelectMenu = On.Menu.SlugcatSelectMenu;
 
 #pragma warning disable CS0618
@@ -75,7 +77,8 @@ public class Plugin : BaseUnityPlugin
             On.Player.CanEatMeat += Player_CanEatMeat;
             On.HardmodeStart.SinglePlayerUpdate += HardmodeStart_SinglePlayerUpdate;
             On.PlayerGraphics.DrawSprites += PlayerGraphics_DrawSprites;
-            
+            On.DreamsState.StaticEndOfCycleProgress += DreamsState_StaticEndOfCycleProgress;
+            //MSCRoomSpecificScript.ArtificerDream_1.SceneSetup += ArtificerDream_1_SceneSetup;            
 
             MachineConnector.SetRegisteredOI("elumenix.pupify", options);
             IsInit = true;
@@ -86,6 +89,59 @@ public class Plugin : BaseUnityPlugin
             throw;
         }
     }
+
+    private void DreamsState_StaticEndOfCycleProgress(On.DreamsState.orig_StaticEndOfCycleProgress orig, SaveState saveState, string currentRegion, string denPosition, ref int cyclesSinceLastDream, ref int cyclesSinceLastFamilyDream, ref int cyclesSinceLastGuideDream, ref int inGWOrSHCounter, ref DreamsState.DreamID upcomingDream, ref DreamsState.DreamID eventDream, ref bool everSleptInSB, ref bool everSleptInSB_S01, ref bool guideHasShownHimselfTopLayer, ref int guideThread, ref bool guideHasShownMoonThisRound, ref int familyThread)
+    {
+        orig(saveState, currentRegion, denPosition, ref cyclesSinceLastDream, ref cyclesSinceLastFamilyDream, ref cyclesSinceLastGuideDream, ref inGWOrSHCounter, ref upcomingDream, ref eventDream, ref everSleptInSB, ref everSleptInSB_S01, ref guideHasShownHimselfTopLayer, ref guideThread, ref guideHasShownMoonThisRound, ref familyThread);
+        if (saveState.saveStateNumber == MoreSlugcatsEnums.SlugcatStatsName.Artificer)
+        {
+            //disabled artificer dreams
+            upcomingDream = null;
+        }
+    }
+
+    // This was originally meant to be an IL hook but I couldn't find a possible way to delete the line
+    // The entire point of this method is simply so that artificer doesn't place a pup on her back because it crashes the game
+    /*private void ArtificerDream_1_SceneSetup(MSCRoomSpecificScript.ArtificerDream_1.orig_SceneSetup orig, MoreSlugcats.MSCRoomSpecificScript.ArtificerDream_1 self)
+    {
+        if (self.artificerPuppet == null)
+		{
+			self.artificerPuppet = new AbstractCreature(self.room.world, StaticWorld.GetCreatureTemplate(CreatureTemplate.Type.Slugcat), null, new WorldCoordinate(self.room.abstractRoom.index, 87, 8, -1), self.room.game.GetNewID());
+			self.artificerPuppet.state = new PlayerState(self.artificerPuppet, 0, MoreSlugcatsEnums.SlugcatStatsName.Artificer, true);
+			self.room.abstractRoom.AddEntity(self.artificerPuppet);
+			self.pup2Puppet = new AbstractCreature(self.room.world, StaticWorld.GetCreatureTemplate(MoreSlugcatsEnums.CreatureTemplateType.SlugNPC), null, new WorldCoordinate(self.room.abstractRoom.index, 87, 8, -1), self.room.game.GetNewID());
+			self.pup2Puppet.ID.setAltSeed(1001);
+			self.pup2Puppet.state = new PlayerNPCState(self.pup2Puppet, 0);
+			self.room.abstractRoom.AddEntity(self.pup2Puppet);
+			self.artificerPuppet.RealizeInRoom();
+			self.pup2Puppet.RealizeInRoom();
+		}
+		if (self.artyPlayerPuppet == null && self.artificerPuppet.realizedCreature != null)
+		{
+			self.artyPlayerPuppet = (self.artificerPuppet.realizedCreature as Player);
+		}
+		if (self.pupPlayerPuppet == null && self.pup2Puppet.realizedCreature != null)
+		{
+			self.pupPlayerPuppet = (self.pup2Puppet.realizedCreature as Player);
+		}
+		AbstractCreature firstAlivePlayer = self.room.game.FirstAlivePlayer;
+        if (firstAlivePlayer == null || self.artyPlayerPuppet == null || self.pupPlayerPuppet == null ||
+            firstAlivePlayer.realizedCreature == null) return;
+        Debug.Log("scene start");
+        self.SpawnAmbientCritters();
+        self.pup2Puppet.state.socialMemory.GetOrInitiateRelationship(firstAlivePlayer.ID).InfluenceLike(1f);
+        self.pup2Puppet.state.socialMemory.GetOrInitiateRelationship(firstAlivePlayer.ID).InfluenceTempLike(1f);
+        self.artyPlayerPuppet.controller = new MoreSlugcats.MSCRoomSpecificScript.ArtificerDream.StartController(self, 0);
+        self.artyPlayerPuppet.standing = true;
+        self.artyPlayerPuppet.slugcatStats.visualStealthInSneakMode = 2f;
+        if (firstAlivePlayer.realizedCreature != null)
+        {
+            (firstAlivePlayer.realizedCreature as Player)?.SuperHardSetPosition(self.artyPlayerPuppet.firstChunk.pos);
+            firstAlivePlayer.pos = self.artyPlayerPuppet.abstractCreature.pos;
+        }
+        self.sceneStarted = true;
+    }*/
+
 
     private void PlayerGraphics_DrawSprites(On.PlayerGraphics.orig_DrawSprites orig, PlayerGraphics self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
     {
