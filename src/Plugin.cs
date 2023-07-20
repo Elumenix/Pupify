@@ -6,6 +6,7 @@ using BepInEx;
 using HarmonyLib;
 using HUD;
 using Menu;
+using MonoMod.Cil;
 using MoreSlugcats;
 using RWCustom;
 using UnityEngine;
@@ -78,7 +79,9 @@ public class Plugin : BaseUnityPlugin
             On.HardmodeStart.SinglePlayerUpdate += HardmodeStart_SinglePlayerUpdate;
             On.PlayerGraphics.DrawSprites += PlayerGraphics_DrawSprites;
             On.DreamsState.StaticEndOfCycleProgress += DreamsState_StaticEndOfCycleProgress;
-            //MSCRoomSpecificScript.ArtificerDream_1.SceneSetup += ArtificerDream_1_SceneSetup;            
+            MSCRoomSpecificScript.ArtificerDream_1.SceneSetup += ArtificerDream_1_SceneSetup;
+            //IL.MoreSlugcats.MSCRoomSpecificScript.ArtificerDream_1.SceneSetup += ArtificerDream_1_SceneSetup;
+            MSCRoomSpecificScript.ArtificerDream_1.GetInput += ArtificerDream_1_GetInput;
 
             MachineConnector.SetRegisteredOI("elumenix.pupify", options);
             IsInit = true;
@@ -90,19 +93,179 @@ public class Plugin : BaseUnityPlugin
         }
     }
 
+    private void ArtificerDream_1_SceneSetup(ILContext il)
+    {
+        ILCursor cursor = new ILCursor(il);
+
+        int targetIndex = -1;
+        for (int i = 0; i < cursor.Instrs.Count; i++)
+        {
+            if (cursor.Instrs[i].Offset == 0x0283)
+            {
+                targetIndex = i;
+                break;
+            }
+        }
+        
+        cursor.Index = targetIndex;
+        cursor.RemoveRange(7);
+    }
+
+    private Player.InputPackage ArtificerDream_1_GetInput(MSCRoomSpecificScript.ArtificerDream_1.orig_GetInput orig, MoreSlugcats.MSCRoomSpecificScript.ArtificerDream_1 self, int index)
+    {
+        AbstractCreature firstAlivePlayer = self.room.game.FirstAlivePlayer;
+
+        if (self.sceneTimer < 302)
+        {
+            firstAlivePlayer.realizedCreature.bodyChunks[0].vel.x += 1.75f;
+        }
+        
+		if (self.sceneTimer < 160)
+		{
+			if (firstAlivePlayer != null)
+            {
+                (firstAlivePlayer.realizedCreature as Player).SuperHardSetPosition(self.artyPlayerPuppet.firstChunk.pos);
+            }
+			return default(Player.InputPackage);
+            //return new Player.InputPackage(false, global::Options.ControlSetup.Preset.None, 1, 0, false, false, true, false, false);
+		}
+		if (self.sceneTimer == 160)
+		{
+			self.artyPlayerPuppet.bodyChunks[0].vel *= 0f;
+			self.artyPlayerPuppet.bodyChunks[1].vel *= 0f;
+			self.artyPlayerPuppet.bodyChunks[0].pos = new Vector2(1900f, 340f);
+			self.artyPlayerPuppet.bodyChunks[1].pos = new Vector2(1900f, 320f);
+			return new Player.InputPackage(false, global::Options.ControlSetup.Preset.None, 1, 1, false, false, true, false, false);
+		}
+		if (self.sceneTimer == 165)
+		{
+			return new Player.InputPackage(false, global::Options.ControlSetup.Preset.None, 1, 1, false, false, true, false, false);
+		}
+		if (self.sceneTimer < 166)
+        {
+            return new Player.InputPackage(false, global::Options.ControlSetup.Preset.None, 1, 1, false, false, true, false, false);
+		}
+		if (self.sceneTimer == 166)
+		{
+			self.artyPlayerPuppet.bodyChunks[0].vel += new Vector2(10f, 13f);
+			self.artyPlayerPuppet.bodyChunks[1].vel += new Vector2(10f, 13f);
+			self.room.AddObject(new ExplosionSpikes(self.room, self.artyPlayerPuppet.bodyChunks[0].pos + new Vector2(0f, -self.artyPlayerPuppet.bodyChunks[0].rad), 8, 7f, 5f, 5.5f, 40f, new Color(1f, 1f, 1f, 0.5f)));
+			self.room.PlaySound(SoundID.Slugcat_Rocket_Jump, self.artyPlayerPuppet.bodyChunks[0], false, 1f, 1f);
+			return new Player.InputPackage(false, global::Options.ControlSetup.Preset.None, 1, 1, true, false, true, false, false);
+		}
+		if (self.sceneTimer <= 190)
+		{
+			return new Player.InputPackage(false, global::Options.ControlSetup.Preset.None, 1, 1, true, false, false, false, false);
+		}
+		if (self.sceneTimer <= 210)
+		{
+			return new Player.InputPackage(false, global::Options.ControlSetup.Preset.None, 0, 1, false, false, false, false, false);
+		}
+		if (self.sceneTimer == 211)
+		{
+			return new Player.InputPackage(false, global::Options.ControlSetup.Preset.None, 0, 0, false, false, false, false, false);
+		}
+		if (self.sceneTimer == 212)
+		{
+			return new Player.InputPackage(false, global::Options.ControlSetup.Preset.None, 0, 1, false, false, false, false, false);
+		}
+		if (self.sceneTimer <= 239)
+		{
+			return default(Player.InputPackage);
+		}
+		if (self.sceneTimer <= 300)
+		{
+			return new Player.InputPackage(false, global::Options.ControlSetup.Preset.None, 1, 1, false, false, false, false, false);
+		}
+		if (self.sceneTimer == 301)
+		{
+			return new Player.InputPackage(false, global::Options.ControlSetup.Preset.None, 0, 0, false, false, false, false, false);
+		}
+		if (self.sceneTimer == 302)
+		{
+			//self.artyPlayerPuppet.slugOnBack.DropSlug();
+			if (firstAlivePlayer != null)
+			{
+				(firstAlivePlayer.realizedCreature as Player).Stun(5);
+				(firstAlivePlayer.realizedCreature as Player).firstChunk.vel = new Vector2(5f, 5f);
+				(firstAlivePlayer.realizedCreature as Player).standing = true;
+			}
+			return new Player.InputPackage(false, global::Options.ControlSetup.Preset.None, 0, 0, false, false, false, false, false);
+		}
+		if (self.sceneTimer <= 304)
+		{
+			return new Player.InputPackage(false, global::Options.ControlSetup.Preset.None, 1, 0, false, false, false, false, false);
+		}
+		if (self.sceneTimer <= 325)
+		{
+			self.ArtyGoalPos = self.room.MiddleOfTile(116, 18);
+			return new Player.InputPackage(false, global::Options.ControlSetup.Preset.None, 1, 1, true, false, false, false, false);
+		}
+		if (self.sceneTimer > 325)
+		{
+			bool jmp = false;
+			int x = 0;
+			if (self.artyPlayerPuppet.firstChunk.pos.x < self.ArtyGoalPos.x - 9f)
+			{
+				x = 1;
+			}
+			else if (self.artyPlayerPuppet.firstChunk.pos.x > self.ArtyGoalPos.x + 9f)
+			{
+				x = -1;
+				jmp = (self.sceneTimer % 20 <= 5 && self.artyPlayerPuppet.bodyMode != Player.BodyModeIndex.ClimbingOnBeam);
+			}
+			int y = 0;
+			if (self.artyPlayerPuppet.bodyMode == Player.BodyModeIndex.ClimbingOnBeam)
+			{
+				if (self.artyPlayerPuppet.firstChunk.pos.y < self.ArtyGoalPos.y - 5f)
+				{
+					if (self.artyPlayerPuppet.firstChunk.pos.x > self.ArtyGoalPos.x + 9f)
+					{
+						y = ((self.sceneTimer % 20 <= 5) ? 0 : 1);
+					}
+					else
+					{
+						y = 1;
+					}
+				}
+				else if (self.artyPlayerPuppet.firstChunk.pos.y > self.ArtyGoalPos.y + 5f)
+				{
+					y = -1;
+				}
+			}
+			else
+			{
+				y = UnityEngine.Random.Range(0, 2);
+			}
+			if (firstAlivePlayer != null && Mathf.Abs(self.room.cameraPositions[2].x + self.room.game.cameras[0].sSize.x / 2f - (firstAlivePlayer.realizedCreature as Player).firstChunk.pos.x) > 1000f && self.sceneTimer < 2000)
+			{
+				Debug.Log("Pup out of camera, cut early");
+				self.sceneTimer = 1999;
+			}
+			else if (self.pup2Puppet.state.dead && self.sceneTimer < 2000)
+			{
+				Debug.Log("Other pup died! cut early");
+				self.sceneTimer = 1999;
+			}
+			return new Player.InputPackage(false, global::Options.ControlSetup.Preset.None, x, y, jmp, false, false, false, false);
+		}
+		return default(Player.InputPackage);
+	}
+
     private void DreamsState_StaticEndOfCycleProgress(On.DreamsState.orig_StaticEndOfCycleProgress orig, SaveState saveState, string currentRegion, string denPosition, ref int cyclesSinceLastDream, ref int cyclesSinceLastFamilyDream, ref int cyclesSinceLastGuideDream, ref int inGWOrSHCounter, ref DreamsState.DreamID upcomingDream, ref DreamsState.DreamID eventDream, ref bool everSleptInSB, ref bool everSleptInSB_S01, ref bool guideHasShownHimselfTopLayer, ref int guideThread, ref bool guideHasShownMoonThisRound, ref int familyThread)
     {
         orig(saveState, currentRegion, denPosition, ref cyclesSinceLastDream, ref cyclesSinceLastFamilyDream, ref cyclesSinceLastGuideDream, ref inGWOrSHCounter, ref upcomingDream, ref eventDream, ref everSleptInSB, ref everSleptInSB_S01, ref guideHasShownHimselfTopLayer, ref guideThread, ref guideHasShownMoonThisRound, ref familyThread);
         if (saveState.saveStateNumber == MoreSlugcatsEnums.SlugcatStatsName.Artificer)
         {
             //disabled artificer dreams
-            upcomingDream = null;
+            upcomingDream = MoreSlugcatsEnums.DreamID.ArtificerFamilyA;
+            
         }
     }
 
     // This was originally meant to be an IL hook but I couldn't find a possible way to delete the line
     // The entire point of this method is simply so that artificer doesn't place a pup on her back because it crashes the game
-    /*private void ArtificerDream_1_SceneSetup(MSCRoomSpecificScript.ArtificerDream_1.orig_SceneSetup orig, MoreSlugcats.MSCRoomSpecificScript.ArtificerDream_1 self)
+    private void ArtificerDream_1_SceneSetup(MSCRoomSpecificScript.ArtificerDream_1.orig_SceneSetup orig, MoreSlugcats.MSCRoomSpecificScript.ArtificerDream_1 self)
     {
         if (self.artificerPuppet == null)
 		{
@@ -140,7 +303,7 @@ public class Plugin : BaseUnityPlugin
             firstAlivePlayer.pos = self.artyPlayerPuppet.abstractCreature.pos;
         }
         self.sceneStarted = true;
-    }*/
+    }
 
 
     private void PlayerGraphics_DrawSprites(On.PlayerGraphics.orig_DrawSprites orig, PlayerGraphics self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
@@ -593,7 +756,9 @@ public class Plugin : BaseUnityPlugin
 
     private Color Player_ShortCutColor(On.Player.orig_ShortCutColor orig, Player self)
     {
-        if (!options.onlyCosmetic.Value && currentSlugcat != null && self.SlugCatClass == currentSlugcat.name && !self.isNPC)
+        int ID = self.abstractCreature.ID.RandomSeed;
+        if (!options.onlyCosmetic.Value && currentSlugcat != null && self.SlugCatClass == currentSlugcat.name &&
+            !self.isNPC && ID != 1000 && ID != 1001 && ID != 1002) // Artificer cutscene IDs
         {
             return PlayerGraphics.SlugcatColor(currentSlugcat.name);
         }
