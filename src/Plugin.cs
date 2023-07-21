@@ -6,7 +6,6 @@ using BepInEx;
 using HarmonyLib;
 using HUD;
 using Menu;
-using MonoMod.Cil;
 using MoreSlugcats;
 using RWCustom;
 using UnityEngine;
@@ -15,6 +14,7 @@ using MenuLabel = Menu.MenuLabel;
 using MenuObject = Menu.MenuObject;
 using MoreSlugcatsEnums = MoreSlugcats.MoreSlugcatsEnums;
 using MSCRoomSpecificScript = On.MoreSlugcats.MSCRoomSpecificScript;
+using Random = UnityEngine.Random;
 using SlugcatSelectMenu = On.Menu.SlugcatSelectMenu;
 
 #pragma warning disable CS0618
@@ -78,11 +78,12 @@ public class Plugin : BaseUnityPlugin
             On.Player.CanEatMeat += Player_CanEatMeat;
             On.HardmodeStart.SinglePlayerUpdate += HardmodeStart_SinglePlayerUpdate;
             On.PlayerGraphics.DrawSprites += PlayerGraphics_DrawSprites;
-            On.DreamsState.StaticEndOfCycleProgress += DreamsState_StaticEndOfCycleProgress;
             MSCRoomSpecificScript.ArtificerDream_1.SceneSetup += ArtificerDream_1_SceneSetup;
-            //IL.MoreSlugcats.MSCRoomSpecificScript.ArtificerDream_1.SceneSetup += ArtificerDream_1_SceneSetup;
             MSCRoomSpecificScript.ArtificerDream_1.GetInput += ArtificerDream_1_GetInput;
             On.Player.GetInitialSlugcatClass += Player_GetInitialSlugcatClass;
+            MSCRoomSpecificScript.ArtificerDream_4.SceneSetup += ArtificerDream_4_SceneSetup;
+            MSCRoomSpecificScript.ArtificerDream_4.GetInput += ArtificerDream_4_GetInput;
+            MSCRoomSpecificScript.ArtificerDream_5.SceneSetup += ArtificerDream_5_SceneSetup;
             //On.Player.Update += Player_Update;
 
             MachineConnector.SetRegisteredOI("elumenix.pupify", options);
@@ -93,6 +94,209 @@ public class Plugin : BaseUnityPlugin
             Logger.LogError(ex);
             throw;
         }
+    }
+
+    private void ArtificerDream_5_SceneSetup(MSCRoomSpecificScript.ArtificerDream_5.orig_SceneSetup orig, MoreSlugcats.MSCRoomSpecificScript.ArtificerDream_5 self)
+    {
+	    self.UpdateCycle(0);
+	    if (self.artificerPuppet == null)
+	    {
+		    self.artificerPuppet = new AbstractCreature(self.room.world, StaticWorld.GetCreatureTemplate(CreatureTemplate.Type.Slugcat), null, new WorldCoordinate(self.room.abstractRoom.index, 120, 46, -1), self.room.game.GetNewID());
+		    self.artificerPuppet.state = new PlayerState(self.artificerPuppet, 0, MoreSlugcatsEnums.SlugcatStatsName.Artificer, true);
+		    self.room.abstractRoom.AddEntity(self.artificerPuppet);
+		    self.artificerPuppet.RealizeInRoom();
+	    }
+	    if (self.artyPlayerPuppet == null && self.artificerPuppet.realizedCreature != null)
+	    {
+		    self.artyPlayerPuppet = (self.artificerPuppet.realizedCreature as Player);
+	    }
+	    AbstractCreature firstAlivePlayer = self.room.game.FirstAlivePlayer;
+	    if (firstAlivePlayer != null && self.artyPlayerPuppet is not null && firstAlivePlayer.realizedCreature != null)
+	    {
+		    self.artyPlayerPuppet.controller = new MoreSlugcats.MSCRoomSpecificScript.ArtificerDream.StartController(self, 0);
+		    self.artyPlayerPuppet.standing = true;
+		    ((Player) firstAlivePlayer.realizedCreature).SuperHardSetPosition(self.artyPlayerPuppet.firstChunk.pos);
+		    ((Player) firstAlivePlayer.realizedCreature).controller = new MoreSlugcats.MSCRoomSpecificScript.ArtificerDream.StartController(self, 1);
+		    //self.artyPlayerPuppet.slugOnBack.SlugToBack(firstAlivePlayer.realizedCreature as Player);
+		    self.sceneStarted = true;
+		    self.SpawnLeeches();
+	    }
+    }
+
+    private Player.InputPackage ArtificerDream_4_GetInput(MSCRoomSpecificScript.ArtificerDream_4.orig_GetInput orig, MoreSlugcats.MSCRoomSpecificScript.ArtificerDream_4 self, int index)
+    {
+        int num = 219;
+		int num2 = num + 60;
+		int num3 = 400;
+		if (index == 2)
+		{
+			AbstractCreature firstAlivePlayer = self.room.game.FirstAlivePlayer;
+			if (self.sceneTimer < num - 109)
+			{
+				return default(Player.InputPackage);
+			}
+			if (self.sceneTimer != num2 + 6)
+			{
+				if (firstAlivePlayer != null)
+				{
+					((Player) firstAlivePlayer.realizedCreature).standing = true;
+				}
+				return new Player.InputPackage(false, global::Options.ControlSetup.Preset.None, 1, 0, false, false, false, false, false);
+			}
+			if (firstAlivePlayer != null)
+			{
+				((Player) firstAlivePlayer.realizedCreature).controller = null;
+			}
+		}
+		if (self.sceneTimer < num - 50 && (index == 0 || index == 2))
+		{
+			int pyroJumpCounter = 1;
+			self.artyPlayerPuppet.standing = true;
+			self.artyPlayerPuppet.pyroJumpCounter = pyroJumpCounter;
+			return new Player.InputPackage(false, global::Options.ControlSetup.Preset.None, 1, 0, false, false, false, false, false);
+		}
+		if (self.sceneTimer < num + 25)
+		{
+			self.artyPlayerPuppet.standing = true;
+			self.pup2PlayerPuppet.standing = true;
+			if (index == 0 && self.sceneTimer > num - 10)
+			{
+				if (self.sceneTimer >= num && self.sceneTimer < num + 10)
+				{
+					return new Player.InputPackage(false, global::Options.ControlSetup.Preset.None, 1, 1, true, false, false, false, false);
+				}
+				if (self.sceneTimer == num + 10)
+				{
+					return new Player.InputPackage(false, global::Options.ControlSetup.Preset.None, 1, 1, false, false, true, false, false);
+				}
+				if (self.sceneTimer == num + 11)
+				{
+					return new Player.InputPackage(false, global::Options.ControlSetup.Preset.None, 1, 1, true, false, true, false, false);
+				}
+				if (self.sceneTimer > num + 11)
+				{
+					return new Player.InputPackage(false, global::Options.ControlSetup.Preset.None, 1, 1, true, false, true, false, false);
+				}
+				return new Player.InputPackage(false, global::Options.ControlSetup.Preset.None, 1, 1, false, false, false, false, false);
+			}
+		}
+		if (self.sceneTimer < num2 && index == 0)
+		{
+			return new Player.InputPackage(false, global::Options.ControlSetup.Preset.None, 0, 1, false, false, false, false, false);
+		}
+		if (self.sceneTimer == num2 && index == 0)
+		{
+			return new Player.InputPackage(false, global::Options.ControlSetup.Preset.None, 1, 1, true, false, false, false, false);
+		}
+		if (self.sceneTimer <= num2 + 15 && index == 0)
+		{
+			return new Player.InputPackage(false, global::Options.ControlSetup.Preset.None, 1, 1, true, false, false, false, false);
+		}
+		if (self.sceneTimer == num2 + 16 && index == 0)
+		{
+			return new Player.InputPackage(false, global::Options.ControlSetup.Preset.None, 1, 1, false, false, true, false, false);
+		}
+		if (self.sceneTimer <= num2 + 20 && index == 0)
+		{
+			if (self.sceneTimer == num2 + 17)
+			{
+				Debug.Log("pup release");
+				/*if (self.artyPlayerPuppet.slugOnBack.HasASlug)
+				{
+					self.artyPlayerPuppet.slugOnBack.DropSlug();
+				}*/
+			}
+			if (self.sceneTimer == num2 + 18)
+			{
+				Debug.Log("pup launch");
+				self.pup2PlayerPuppet.Stun(60);
+				self.pup2PlayerPuppet.bodyChunks[0].vel = new Vector2(14f, 16f);
+				self.pup2PlayerPuppet.bodyChunks[1].vel = new Vector2(14f, 16f);
+				self.artyPlayerPuppet.bodyChunks[0].vel = new Vector2(17f, 38f);
+				self.artyPlayerPuppet.bodyChunks[1].vel = new Vector2(17f, 38f);
+			}
+			self.artyPlayerPuppet.playerState.permanentDamageTracking = 0.5;
+			return new Player.InputPackage(false, global::Options.ControlSetup.Preset.None, 1, 1, true, false, true, false, false);
+		}
+		if (self.sceneTimer < num2 + 100 && index == 1)
+		{
+			self.pup2PlayerPuppet.standing = true;
+			return new Player.InputPackage(false, global::Options.ControlSetup.Preset.None, 1, (self.sceneTimer < num2 + 102) ? 1 : 0, true, false, false, false, false);
+		}
+		if (self.sceneTimer > num3 && self.sceneTimer < 800 && index == 0)
+		{
+			if (self.artyPlayerPuppet.firstChunk.pos.x < 1939f)
+			{
+				self.artyPlayerPuppet.firstChunk.vel += new Vector2(0f, 1f);
+				self.artyPlayerPuppet.playerState.permanentDamageTracking = 0.0;
+			}
+			else
+			{
+				self.artyPlayerPuppet.playerState.permanentDamageTracking = 0.5;
+			}
+			int y = (self.sceneTimer < num3 + 2) ? 1 : 0;
+			if (!self.artyPlayerPuppet.standing && Random.value < 0.1)
+			{
+				y = 1;
+			}
+			if (!self.pup2PlayerPuppet.standing && Random.value < 0.1)
+			{
+				y = 1;
+			}
+			return new Player.InputPackage(false, global::Options.ControlSetup.Preset.None, 1, y, false, false, false, false, false);
+		}
+		if (self.sceneTimer > num2 + 100 && self.sceneTimer < 700 && index == 1)
+		{
+			return new Player.InputPackage(false, global::Options.ControlSetup.Preset.None, 1, 0, true, false, false, false, false);
+		}
+		if (self.sceneTimer > num2 + 101 && self.sceneTimer < 700 && index == 1)
+		{
+			// ReSharper disable once CompareOfFloatsByEqualityOperator
+			return new Player.InputPackage(false, global::Options.ControlSetup.Preset.None, 1, 0, Mathf.Floor(Mathf.Pow(Random.value + 0.5f, 4f)) == 1f, false, false, false, false);
+		}
+		return default(Player.InputPackage);
+    }
+
+    private void ArtificerDream_4_SceneSetup(MSCRoomSpecificScript.ArtificerDream_4.orig_SceneSetup orig, MoreSlugcats.MSCRoomSpecificScript.ArtificerDream_4 self)
+    {
+        if (self.artificerPuppet == null)
+		{
+			self.artificerPuppet = new AbstractCreature(self.room.world, StaticWorld.GetCreatureTemplate(CreatureTemplate.Type.Slugcat), null, new WorldCoordinate(self.room.abstractRoom.index, 52, 42, -1), self.room.game.GetNewID());
+			self.artificerPuppet.state = new PlayerState(self.artificerPuppet, 0, MoreSlugcatsEnums.SlugcatStatsName.Artificer, true);
+			self.room.abstractRoom.AddEntity(self.artificerPuppet);
+			self.artificerPuppet.RealizeInRoom();
+			self.pup2Puppet = new AbstractCreature(self.room.world, StaticWorld.GetCreatureTemplate(CreatureTemplate.Type.Slugcat), null, new WorldCoordinate(self.room.abstractRoom.index, 52, 42, -1), self.room.game.GetNewID());
+			self.pup2Puppet.ID.setAltSeed(1001);
+			self.pup2Puppet.state = new PlayerState(self.pup2Puppet, 0, MoreSlugcatsEnums.SlugcatStatsName.Slugpup, true);
+			self.room.abstractRoom.AddEntity(self.pup2Puppet);
+			self.pup2Puppet.RealizeInRoom();
+		}
+		AbstractCreature firstAlivePlayer = self.room.game.FirstAlivePlayer;
+		if (firstAlivePlayer is {realizedCreature: not null})
+		{
+			((Player) firstAlivePlayer.realizedCreature).SuperHardSetPosition(self.room.MiddleOfTile(new WorldCoordinate(self.room.abstractRoom.index, 50, 44, -1).Tile));
+		}
+		if (self.artyPlayerPuppet == null && self.artificerPuppet.realizedCreature != null)
+		{
+			self.artyPlayerPuppet = (self.artificerPuppet.realizedCreature as Player);
+		}
+		if (self.pup2PlayerPuppet == null && self.pup2Puppet.realizedCreature != null)
+		{
+			self.pup2PlayerPuppet = (self.pup2Puppet.realizedCreature as Player);
+			self.pup2PlayerPuppet!.controller = new MoreSlugcats.MSCRoomSpecificScript.ArtificerDream.StartController(self, 1);
+		}
+		if (firstAlivePlayer != null && self.artyPlayerPuppet != null && self.pup2PlayerPuppet != null && firstAlivePlayer.realizedCreature != null)
+		{
+			self.artyPlayerPuppet.controller = new MoreSlugcats.MSCRoomSpecificScript.ArtificerDream.StartController(self, 0);
+			self.artyPlayerPuppet.standing = true;
+			((Player) firstAlivePlayer.realizedCreature).controller = new MoreSlugcats.MSCRoomSpecificScript.ArtificerDream.StartController(self, 2);
+			//self.artyPlayerPuppet.slugOnBack.SlugToBack(self.pup2PlayerPuppet);
+			DataPearl.AbstractDataPearl abstractDataPearl = new DataPearl.AbstractDataPearl(self.room.world, AbstractPhysicalObject.AbstractObjectType.DataPearl, null, new WorldCoordinate(self.room.abstractRoom.index, 50, 42, -1), self.room.game.GetNewID(), self.room.abstractRoom.index, -1, null, DataPearl.AbstractDataPearl.DataPearlType.Misc2);
+			abstractDataPearl.RealizeInRoom();
+			// ReSharper disable once CommentTypo
+			//(firstAlivePlayer.realizedCreature as Player).Grab(abstractDataPearl.realizedObject, 0, 0, Creature.Grasp.Shareability.CanNotShare, 1f, true, false);
+			self.sceneStarted = true;
+		}
     }
 
     private void Player_Update(On.Player.orig_Update orig, Player self, bool eu)
@@ -127,24 +331,6 @@ public class Plugin : BaseUnityPlugin
         }
     }
 
-    private void ArtificerDream_1_SceneSetup(ILContext il)
-    {
-        ILCursor cursor = new ILCursor(il);
-
-        int targetIndex = -1;
-        for (int i = 0; i < cursor.Instrs.Count; i++)
-        {
-            if (cursor.Instrs[i].Offset == 0x0283)
-            {
-                targetIndex = i;
-                break;
-            }
-        }
-        
-        cursor.Index = targetIndex;
-        cursor.RemoveRange(7);
-    }
-
     private Player.InputPackage ArtificerDream_1_GetInput(MSCRoomSpecificScript.ArtificerDream_1.orig_GetInput orig, MoreSlugcats.MSCRoomSpecificScript.ArtificerDream_1 self, int index)
     {
         AbstractCreature firstAlivePlayer = self.room.game.FirstAlivePlayer;
@@ -156,11 +342,8 @@ public class Plugin : BaseUnityPlugin
         
 		if (self.sceneTimer < 160)
 		{
-			if (firstAlivePlayer != null)
-            {
-                (firstAlivePlayer.realizedCreature as Player).SuperHardSetPosition(self.artyPlayerPuppet.firstChunk.pos);
-            }
-			return default(Player.InputPackage);
+            (firstAlivePlayer?.realizedCreature as Player)?.SuperHardSetPosition(self.artyPlayerPuppet.firstChunk.pos);
+            return default(Player.InputPackage);
             //return new Player.InputPackage(false, global::Options.ControlSetup.Preset.None, 1, 0, false, false, true, false, false);
 		}
 		if (self.sceneTimer == 160)
@@ -220,9 +403,9 @@ public class Plugin : BaseUnityPlugin
 			//self.artyPlayerPuppet.slugOnBack.DropSlug();
 			if (firstAlivePlayer != null)
 			{
-				(firstAlivePlayer.realizedCreature as Player).Stun(5);
-				(firstAlivePlayer.realizedCreature as Player).firstChunk.vel = new Vector2(5f, 5f);
-				(firstAlivePlayer.realizedCreature as Player).standing = true;
+				((Player) firstAlivePlayer.realizedCreature).Stun(5);
+				((Player) firstAlivePlayer.realizedCreature).firstChunk.vel = new Vector2(5f, 5f);
+				((Player) firstAlivePlayer.realizedCreature).standing = true;
 			}
 			return new Player.InputPackage(false, global::Options.ControlSetup.Preset.None, 0, 0, false, false, false, false, false);
 		}
@@ -269,9 +452,9 @@ public class Plugin : BaseUnityPlugin
 			}
 			else
 			{
-				y = UnityEngine.Random.Range(0, 2);
+				y = Random.Range(0, 2);
 			}
-			if (firstAlivePlayer != null && Mathf.Abs(self.room.cameraPositions[2].x + self.room.game.cameras[0].sSize.x / 2f - (firstAlivePlayer.realizedCreature as Player).firstChunk.pos.x) > 1000f && self.sceneTimer < 2000)
+			if (firstAlivePlayer != null && Mathf.Abs(self.room.cameraPositions[2].x + self.room.game.cameras[0].sSize.x / 2f - ((Player) firstAlivePlayer.realizedCreature).firstChunk.pos.x) > 1000f && self.sceneTimer < 2000)
 			{
 				Debug.Log("Pup out of camera, cut early");
 				self.sceneTimer = 1999;
@@ -285,17 +468,6 @@ public class Plugin : BaseUnityPlugin
 		}
 		return default(Player.InputPackage);
 	}
-
-    private void DreamsState_StaticEndOfCycleProgress(On.DreamsState.orig_StaticEndOfCycleProgress orig, SaveState saveState, string currentRegion, string denPosition, ref int cyclesSinceLastDream, ref int cyclesSinceLastFamilyDream, ref int cyclesSinceLastGuideDream, ref int inGWOrSHCounter, ref DreamsState.DreamID upcomingDream, ref DreamsState.DreamID eventDream, ref bool everSleptInSB, ref bool everSleptInSB_S01, ref bool guideHasShownHimselfTopLayer, ref int guideThread, ref bool guideHasShownMoonThisRound, ref int familyThread)
-    {
-        orig(saveState, currentRegion, denPosition, ref cyclesSinceLastDream, ref cyclesSinceLastFamilyDream, ref cyclesSinceLastGuideDream, ref inGWOrSHCounter, ref upcomingDream, ref eventDream, ref everSleptInSB, ref everSleptInSB_S01, ref guideHasShownHimselfTopLayer, ref guideThread, ref guideHasShownMoonThisRound, ref familyThread);
-        if (saveState.saveStateNumber == MoreSlugcatsEnums.SlugcatStatsName.Artificer)
-        {
-            //disabled artificer dreams
-            upcomingDream = MoreSlugcatsEnums.DreamID.ArtificerFamilyA;
-            
-        }
-    }
 
     // This was originally meant to be an IL hook but I couldn't find a possible way to delete the line
     // The entire point of this method is simply so that artificer doesn't place a pup on her back because it crashes the game
