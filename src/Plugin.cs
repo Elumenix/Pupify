@@ -82,6 +82,8 @@ public class Plugin : BaseUnityPlugin
             MSCRoomSpecificScript.ArtificerDream_1.SceneSetup += ArtificerDream_1_SceneSetup;
             //IL.MoreSlugcats.MSCRoomSpecificScript.ArtificerDream_1.SceneSetup += ArtificerDream_1_SceneSetup;
             MSCRoomSpecificScript.ArtificerDream_1.GetInput += ArtificerDream_1_GetInput;
+            On.Player.GetInitialSlugcatClass += Player_GetInitialSlugcatClass;
+            //On.Player.Update += Player_Update;
 
             MachineConnector.SetRegisteredOI("elumenix.pupify", options);
             IsInit = true;
@@ -90,6 +92,38 @@ public class Plugin : BaseUnityPlugin
         {
             Logger.LogError(ex);
             throw;
+        }
+    }
+
+    private void Player_Update(On.Player.orig_Update orig, Player self, bool eu)
+    {
+        orig(self, eu);
+
+        Debug.Log("RunSpeed: " + self.slugcatStats.runspeedFac);
+        Debug.Log("BodyWeight: " + self.slugcatStats.bodyWeightFac);
+        Debug.Log("GeneralVisibility: " + self.slugcatStats.generalVisibilityBonus);
+        Debug.Log("VisualStealth: " + self.slugcatStats.visualStealthInSneakMode);
+        Debug.Log("Loudness: " + self.slugcatStats.loudnessFac);
+        Debug.Log("LungsFac: " + self.slugcatStats.lungsFac);
+        Debug.Log("ThrowingSkill: " + self.slugcatStats.throwingSkill);
+        Debug.Log("PoleClimbSpeed: " + self.slugcatStats.poleClimbSpeedFac);
+        Debug.Log("CorridorClimbSpeed: " + self.slugcatStats.corridorClimbSpeedFac);
+    }
+
+
+    private void Player_GetInitialSlugcatClass(On.Player.orig_GetInitialSlugcatClass orig, Player self)
+    {
+        // This entire method, despite seeming important for this mod, only actually has to be used in
+        // arena mode, where a players original slugcatStats variable gets deleted when changed to pup
+        // This small change updates the player to the correct value upon spawning in
+        if (!self.isNPC && !(ModManager.CoopAvailable && self.abstractCreature.Room.world.game.IsStorySession) &&
+            !(!ModManager.MSC || self.abstractCreature.Room.world.game.IsStorySession) && self.slugcatStats == null)
+        {
+            self.SlugCatClass = currentSlugcat.name;
+        }
+        else
+        {
+            orig(self);
         }
     }
 
@@ -768,9 +802,13 @@ public class Plugin : BaseUnityPlugin
 
     private void ProcessManager_PostSwitchMainProcess(On.ProcessManager.orig_PostSwitchMainProcess orig, ProcessManager self, ProcessManager.ProcessID ID) 
     {
-        if (!options.onlyCosmetic.Value && ID == ProcessManager.ProcessID.Game)
+        // Multiplayer menu check is so that players can switch between characters in the arena 
+        // otherwise the same recolored character will be used if the player goes back to arena with a different character
+        
+        if (!options.onlyCosmetic.Value && ((ID == ProcessManager.ProcessID.Game && self.oldProcess.ID != ProcessManager.ProcessID.MultiplayerMenu) || ID == ProcessManager.ProcessID.MultiplayerMenu))
         {
-            // Allow game to set up starving values
+            // Allow game to set up starving values : Should not be nullified if switching into arena mode, or 
+            // else the stats reference will be nullified and the game will crash
             currentSlugcat = null;
         }
 
@@ -790,8 +828,12 @@ public class Plugin : BaseUnityPlugin
             // When the NPCStats method runs, after the program realizes I set the player to be treated as a pup, the 
             // method creates a new slugCatStats for the player. The second time through overwrites those stats directly
             // This is how both stat calculation rules work. Natural slugpup rules will instead not overwrite on the second run
+            
+            // Arena works slightly differently in that the game established everyone as a Survivor first, then changes 
+            // their stats & class afterwards, so secondary checks are to allow the stats to get overwritten
+            // Otherwise, depending on implementation, the game either crashes or spawns everyone as a survivor pup
 
-            if (currentSlugcat == null)
+            if (currentSlugcat == null || (slugcat != MoreSlugcatsEnums.SlugcatStatsName.Slugpup && currentSlugcat.name == SlugcatStats.Name.White))
             {
                 currentSlugcat = self;
 
@@ -840,7 +882,7 @@ public class Plugin : BaseUnityPlugin
             if (options.statsOption.Value == 0) // Calculated
             {
                 // second condition is added in case food was also adjusted
-                if (currentSlugcat == null || currentSlugcat == self)
+                if (currentSlugcat == null || currentSlugcat == self || (slugcat != MoreSlugcatsEnums.SlugcatStatsName.Slugpup && currentSlugcat.name == SlugcatStats.Name.White))
                 {
                     currentSlugcat = self;
 
@@ -883,7 +925,7 @@ public class Plugin : BaseUnityPlugin
             }
             else if (options.statsOption.Value == 1) // Original
             {
-                if (currentSlugcat == null || currentSlugcat == self)
+                if (currentSlugcat == null || currentSlugcat == self || (slugcat != MoreSlugcatsEnums.SlugcatStatsName.Slugpup && currentSlugcat.name == SlugcatStats.Name.White))
                 {
                     currentSlugcat = self;
 
@@ -909,7 +951,7 @@ public class Plugin : BaseUnityPlugin
             }
             else // Pup Route
             {
-                if (currentSlugcat == null || currentSlugcat == self)
+                if (currentSlugcat == null || currentSlugcat == self || (slugcat != MoreSlugcatsEnums.SlugcatStatsName.Slugpup && currentSlugcat.name == SlugcatStats.Name.White))
                 {
                     currentSlugcat = self;
                 }
@@ -969,7 +1011,8 @@ public class Plugin : BaseUnityPlugin
 
     public static bool Player_isSlugpup(Player __instance, ref bool __result)
     {
-        if (!options.onlyCosmetic.Value)
+        
+        if (!options.onlyCosmetic.Value /*&& __instance.abstractCreature.world.game.rainWorld.processManager.currentMainLoop.ID != ProcessManager.ProcessID.Game*/)
         {
             // This actually is an npc
             __result = true;
