@@ -38,7 +38,7 @@ public static class PlayerHooks
     private static void Player_ctor(On.Player.orig_ctor orig, Player self, AbstractCreature abstractCreature, World world)
     {
         orig(self, abstractCreature, world);
-        
+
         // Aesthetic Mode : Yes, this is all that is needed
         if (Plugin.options.onlyCosmetic.Value)
         {
@@ -47,6 +47,32 @@ public static class PlayerHooks
         }
         else
         {
+            // natural slugpup
+            if (self.isNPC)
+            {
+                // recalculate natural stats
+                // Slugpups npcStats are saved, but because stats runs twice, the actual stats are set to base initially
+                self.slugcatStats.runspeedFac *= 0.85f + 0.15f * self.npcStats.Met + 0.15f * (1f - self.npcStats.Bal) +
+                                                 0.1f * (1f - self.npcStats.Stealth);
+                self.slugcatStats.bodyWeightFac *= 0.85f + 0.15f * self.npcStats.Wideness + 0.1f * self.npcStats.Met;
+                self.slugcatStats.generalVisibilityBonus *=
+                    0.8f + 0.2f * (1f - self.npcStats.Stealth) + 0.2f * self.npcStats.Met;
+                self.slugcatStats.visualStealthInSneakMode *=
+                    0.75f + 0.35f * self.npcStats.Stealth + 0.15f * (1f - self.npcStats.Met);
+                self.slugcatStats.loudnessFac *=
+                    0.8f + 0.2f * self.npcStats.Wideness + 0.2f * (1f - self.npcStats.Stealth);
+                self.slugcatStats.lungsFac *=
+                    0.8f + 0.2f * (1f - self.npcStats.Met) + 0.2f * (1f - self.npcStats.Stealth);
+                self.slugcatStats.poleClimbSpeedFac *= 0.85f + 0.15f * self.npcStats.Met + 0.15f * self.npcStats.Bal +
+                                                       0.1f * (1f - self.npcStats.Stealth);
+                self.slugcatStats.corridorClimbSpeedFac *= 0.85f + 0.15f * self.npcStats.Met +
+                                                           0.15f * (1f - self.npcStats.Bal) +
+                                                           0.1f * (1f - self.npcStats.Stealth);
+                
+                
+                return;
+            }
+            
             // An exception will be thrown and the player can't eat if they start with more food than the food bar can hold
             // This can only actually happen if they activate or switch the mod settings mid campaign
             if (self.playerState.foodInStomach > self.slugcatStats.maxFood - self.slugcatStats.foodToHibernate)
@@ -279,8 +305,10 @@ public static class PlayerHooks
     {
         // this will correct body color changes
         orig(self, slugcat, Plugin.currentSlugcat is {malnourished: true} || malnourished);
+        
 
-        if (Plugin.options.onlyCosmetic.Value) return;
+        // playerCreated is checked solely in case a slugpup spawns, It prevents the slugpup from copying the player stats
+        if (Plugin.options.onlyCosmetic.Value || (Plugin.playerCreated && !ModManager.JollyCoop)) return;
         // This block will run twice, once following the initial creation of the campaign character
         // The second after the creation of the pup. The player actually plays as the pup
         // I store a reference to the first character, who will be instantiated with the correct stats the first time through
@@ -332,6 +360,8 @@ public static class PlayerHooks
         }
         else
         {
+            Plugin.playerCreated = true;
+            
             // Don't override the slugpup : malnourishment already calculated
             self.foodToHibernate = Plugin.currentSlugcat.foodToHibernate;
             self.maxFood = Plugin.currentSlugcat.maxFood;
@@ -371,8 +401,10 @@ public static class PlayerHooks
                     self.throwingSkill = 0;
                 }
             }
-            else
+            else 
             {
+                Plugin.playerCreated = true;
+                
                 // Apply all values to pup
                 self.runspeedFac = Plugin.currentSlugcat.runspeedFac;
                 self.bodyWeightFac = Plugin.currentSlugcat.bodyWeightFac;
@@ -401,6 +433,8 @@ public static class PlayerHooks
             }
             else
             {
+                Plugin.playerCreated = true;
+                
                 // Apply all values to pup
                 self.runspeedFac = Plugin.currentSlugcat.runspeedFac;
                 self.bodyWeightFac = Plugin.currentSlugcat.bodyWeightFac;
@@ -423,6 +457,8 @@ public static class PlayerHooks
             }
             else
             {
+                Plugin.playerCreated = true;
+                
                 // Essentially default values are used, this combats npcStats constructor changing player values
                 self.runspeedFac *= (.8f / .84f); 
                 self.bodyWeightFac *= (.65f / .63375f);

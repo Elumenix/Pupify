@@ -15,9 +15,11 @@ namespace Pupify;
 [BepInPlugin("elumenix.pupify", "Pupify", "1.0.0")]
 public class Plugin : BaseUnityPlugin
 {
+    // Mod-wide fields
 	public static Options options;
-
     public static SlugcatStats currentSlugcat;
+    public static bool playerCreated = false;
+
     public Plugin()
     {
         try
@@ -54,7 +56,7 @@ public class Plugin : BaseUnityPlugin
             MiscHooks.Init();
             
             // Test code
-            //On.Player.Update += Player_Update;
+            On.Player.Update += Player_Update;
 
             MachineConnector.SetRegisteredOI("elumenix.pupify", options);
             IsInit = true;
@@ -71,15 +73,15 @@ public class Plugin : BaseUnityPlugin
     {
         orig(self, eu);
 
-        Debug.Log("RunSpeed: " + self.slugcatStats.runspeedFac);
-        Debug.Log("BodyWeight: " + self.slugcatStats.bodyWeightFac);
-        Debug.Log("GeneralVisibility: " + self.slugcatStats.generalVisibilityBonus);
-        Debug.Log("VisualStealth: " + self.slugcatStats.visualStealthInSneakMode);
-        Debug.Log("Loudness: " + self.slugcatStats.loudnessFac);
-        Debug.Log("LungsFac: " + self.slugcatStats.lungsFac);
-        Debug.Log("ThrowingSkill: " + self.slugcatStats.throwingSkill);
-        Debug.Log("PoleClimbSpeed: " + self.slugcatStats.poleClimbSpeedFac);
-        Debug.Log("CorridorClimbSpeed: " + self.slugcatStats.corridorClimbSpeedFac);
+        Debug.Log(self.abstractCreature.ID + " RunSpeed: " + self.slugcatStats.runspeedFac);
+        Debug.Log(self.abstractCreature.ID + " BodyWeight: " + self.slugcatStats.bodyWeightFac);
+        Debug.Log(self.abstractCreature.ID + " GeneralVisibility: " + self.slugcatStats.generalVisibilityBonus);
+        Debug.Log(self.abstractCreature.ID + " VisualStealth: " + self.slugcatStats.visualStealthInSneakMode);
+        Debug.Log(self.abstractCreature.ID + " Loudness: " + self.slugcatStats.loudnessFac);
+        Debug.Log(self.abstractCreature.ID + " LungsFac: " + self.slugcatStats.lungsFac);
+        Debug.Log(self.abstractCreature.ID + " ThrowingSkill: " + self.slugcatStats.throwingSkill);
+        Debug.Log(self.abstractCreature.ID + " PoleClimbSpeed: " + self.slugcatStats.poleClimbSpeedFac);
+        Debug.Log(self.abstractCreature.ID + " CorridorClimbSpeed: " + self.slugcatStats.corridorClimbSpeedFac);
     }
     
     
