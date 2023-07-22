@@ -1,7 +1,7 @@
 {
   "id": "elumenix.pupify",
   "name": "Pupify",
-  "version": "1.0.4",
+  "version": "1.2.1",
   "authors": "Elumenix",
   "description": "Time for some slugpup campaigns!",
   "requirements": ["moreslugcats"],

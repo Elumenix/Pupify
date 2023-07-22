@@ -21,6 +21,8 @@ public class Options : OptionInterface
         letStomach = config.Bind("letStomach", false);
         letMaul = config.Bind("letMaul", false);
         letEatMeat = config.Bind("letEatMeat", false);
+        holdHands = config.Bind("holdHands", false);
+        letPickup = config.Bind("letPickup", false);
     }
 
     public readonly Configurable<bool> onlyCosmetic;
@@ -30,6 +32,8 @@ public class Options : OptionInterface
     public readonly Configurable<bool> letStomach;
     public readonly Configurable<bool> letEatMeat;
     public readonly Configurable<bool> letMaul;
+    public readonly Configurable<bool> holdHands;
+    public readonly Configurable<bool> letPickup;
 
 
     private UIelement[] UIArrPlayerOptions;
@@ -100,7 +104,7 @@ public class Options : OptionInterface
                                     "have any effect on \nthe game."){color = new Color(0.85f,0.2f,0.4f)},
             
             new OpLabel(10f, 570f, "Modify", true),
-			new OpRect(new Vector2(0f, 343f), new Vector2(257f, 220f)),
+			new OpRect(new Vector2(0f, 223f), new Vector2(257f, 340f)),
 			new OpLabel(15f, 500f, "Stomach Items"),
             new OpCheckBox(letStomach, 120f, 500f)
             {
@@ -117,6 +121,19 @@ public class Options : OptionInterface
             new OpCheckBox(letMaul, 120f, 380f)
             {
               description  = "This kitty(slug) has claws."
+            },
+            
+            
+            new OpLabel(15f, 320f, "Hold Hands"),
+            new OpCheckBox(holdHands, 120f, 320f)
+            {
+                description = "Seek companionship in this harsh world.\nWarning: Looks weird, but worth it for those invested."
+            },
+            
+            new OpLabel(15f, 260f, "Pickup Slugpups"),
+            new OpCheckBox(letPickup, 120f, 260f)
+            {
+                description = "Time for some piggyback rides.\nNote: Requires \"Hold Hands\" to work."
             },
 			
 			

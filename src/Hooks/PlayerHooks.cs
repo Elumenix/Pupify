@@ -16,6 +16,7 @@ public static class PlayerHooks
         On.Player.FreeHand += Player_FreeHand;
         On.Player.GrabUpdate += Player_GrabUpdate;
         On.Player.SlugcatGrab += Player_SlugcatGrab;
+        On.Player.Grabability += Player_Grabability;
         On.Player.CanEatMeat += Player_CanEatMeat;
         
         // Stats
@@ -69,8 +70,13 @@ public static class PlayerHooks
                                                            0.15f * (1f - self.npcStats.Bal) +
                                                            0.1f * (1f - self.npcStats.Stealth);
                 
-                
                 return;
+            }
+            
+            // This is what lets the player put a slugpup on their back
+            if (Plugin.options.letPickup.Value)
+            {
+                self.slugOnBack = new Player.SlugOnBack(self);
             }
             
             // An exception will be thrown and the player can't eat if they start with more food than the food bar can hold
@@ -228,6 +234,31 @@ public static class PlayerHooks
         {
             orig(self, obj, graspUsed);
         }
+    }
+    
+    
+    private static Player.ObjectGrabability Player_Grabability(On.Player.orig_Grabability orig, Player self, PhysicalObject obj)
+    {
+        // Figures out grabability for non slugpups
+        var initial = orig(self, obj);
+
+        // If the player is allowed to grab other slugpups
+        if (!Plugin.options.onlyCosmetic.Value && Plugin.options.holdHands.Value && !self.isNPC)
+        {
+            if (!(obj is Creature creature && !creature.Template.smallCreature && (creature.dead ||
+                    (SlugcatStats.SlugcatCanMaul(self.SlugCatClass) && self.dontGrabStuff < 1 && creature != self &&
+                     !creature.Consious))))
+            {
+                if (obj is Player player && player != self &&
+                    player.SlugCatClass == MoreSlugcatsEnums.SlugcatStatsName.Slugpup &&
+                    !player.playerState.forceFullGrown)
+                {
+                    initial = Player.ObjectGrabability.OneHand;
+                }
+            }
+        }
+
+        return initial;
     }
     
     
