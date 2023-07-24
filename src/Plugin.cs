@@ -56,7 +56,7 @@ public class Plugin : BaseUnityPlugin
             MiscHooks.Init();
             
             // Test code
-            On.Player.Update += Player_Update;
+            //On.Player.Update += Player_Update;
 
             MachineConnector.SetRegisteredOI("elumenix.pupify", options);
             IsInit = true;
