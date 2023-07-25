@@ -24,6 +24,7 @@ public static class PlayerHooks
         On.SlugcatStats.ctor += SlugcatStats_ctor;
         
         // Appearance
+        On.PlayerGraphics.ctor += PlayerGraphics_ctor;
         On.PlayerGraphics.DrawSprites += PlayerGraphics_DrawSprites;
         On.Player.ShortCutColor += Player_ShortCutColor;
         On.SlugcatHand.Update += SlugcatHandOnUpdate;
@@ -503,57 +504,131 @@ public static class PlayerHooks
 
 
     #region Appearance
+    private static void PlayerGraphics_ctor(On.PlayerGraphics.orig_ctor orig, PlayerGraphics self, PhysicalObject ow)
+    {
+        orig(self, ow);
+
+        // Use natural slugpup tail instead of cosmetic mode slugpup tail to prevent corridor stalling
+        if (Plugin.options.onlyCosmetic.Value || self.player.isNPC ||
+            self.player.SlugCatClass == MoreSlugcatsEnums.SlugcatStatsName.Spear) return;
+        
+        float num = 0.85f + 0.3f * Mathf.Lerp(self.player.npcStats.Wideness, 0.5f, self.player.playerState.isPup ? 0.5f : 0f);
+        float num2 = (0.75f + 0.5f * self.player.npcStats.Size) * (self.player.playerState.isPup ? 0.5f : 1f);
+        self.tail[0] = new TailSegment(self, 6f * num, 4f * num2, null, 0.85f, 1f, 1f, true);
+        self.tail[1] = new TailSegment(self, 4f * num, 7f * num2, self.tail[0], 0.85f, 1f, 0.5f, true);
+        self.tail[2] = new TailSegment(self, 2.5f * num, 7f * num2, self.tail[1], 0.85f, 1f, 0.5f, true);
+        self.tail[3] = new TailSegment(self, 1f * num, 7f * num2, self.tail[2], 0.85f, 1f, 0.5f, true);
+    }
+    
+    
     private static void PlayerGraphics_DrawSprites(On.PlayerGraphics.orig_DrawSprites orig, PlayerGraphics self,
         RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
     {
         orig(self, sLeaser, rCam, timeStacker, camPos);
+
         
+        // PART 1
         // This should always happen, because render as pup is the thing that causes it
-        //  Aside from the final line, All of this code is just to find the rotation of the head
-        if (self.player.SlugCatClass != MoreSlugcatsEnums.SlugcatStatsName.Saint) return;
-        float num = 0.5f +
-                    0.5f * Mathf.Sin(Mathf.Lerp(self.lastBreath, self.breath, timeStacker) * 3.1415927f * 2f);
+        // Aside from the final line, All of this code is just to find the rotation of the head
+        if (self.player.SlugCatClass == MoreSlugcatsEnums.SlugcatStatsName.Saint)
+        {
+            float num = 0.5f +
+                        0.5f * Mathf.Sin(Mathf.Lerp(self.lastBreath, self.breath, timeStacker) * 3.1415927f * 2f);
+            
+            Vector2 vector = Vector2.Lerp(self.drawPositions[0, 1], self.drawPositions[0, 0], timeStacker);
+            Vector2 vector2 = Vector2.Lerp(self.drawPositions[1, 1], self.drawPositions[1, 0], timeStacker);
+            Vector2 vector3 = Vector2.Lerp(self.head.lastPos, self.head.pos, timeStacker);
 
-        Vector2 vector = Vector2.Lerp(self.drawPositions[0, 1], self.drawPositions[0, 0], timeStacker);
-        Vector2 vector2 = Vector2.Lerp(self.drawPositions[1, 1], self.drawPositions[1, 0], timeStacker);
-        Vector2 vector3 = Vector2.Lerp(self.head.lastPos, self.head.pos, timeStacker);
-            
-        if (self.player.aerobicLevel > 0.5f)
-        {
-            vector += Custom.DirVec(vector2, vector) * Mathf.Lerp(-1f, 1f, num) *
-                      Mathf.InverseLerp(0.5f, 1f, self.player.aerobicLevel) * 0.5f;
-            vector3 -= Custom.DirVec(vector2, vector) * Mathf.Lerp(-1f, 1f, num) *
-                       Mathf.Pow(Mathf.InverseLerp(0.5f, 1f, self.player.aerobicLevel), 1.5f) * 0.75f;
-        }
-
-        float num3 = Custom.AimFromOneVectorToAnother(Vector2.Lerp(vector2, vector, 0.5f), vector3);
-        int num4 = Mathf.RoundToInt((Mathf.Abs(num3 / 360f * 34f)));
-            
-        if (self.player.sleepCurlUp > 0f)
-        {
-            num4 = 7;
-            num4 = Custom.IntClamp((int)Mathf.Lerp(num4, 4f, self.player.sleepCurlUp), 0, 8);
-        }
-            
-        // each if statement from hereon is checking the conditions of several blocks to figure out if num4 changes
-        if (self.player.sleepCurlUp <= 0 && self.owner.room != null && self.owner.EffectiveRoomGravity == 0f)
-        {
-            num4 = 0;
-        }
-        else if (self.player.Consious)
-        {
-            if ((self.player.bodyMode == Player.BodyModeIndex.Stand && self.player.input[0].x != 0) ||
-                self.player.bodyMode == Player.BodyModeIndex.Crawl)
+            if (self.player.aerobicLevel > 0.5f)
             {
-                num4 = self.player.bodyMode == Player.BodyModeIndex.Crawl ? 7 : 6;
+                vector += Custom.DirVec(vector2, vector) * Mathf.Lerp(-1f, 1f, num) *
+                          Mathf.InverseLerp(0.5f, 1f, self.player.aerobicLevel) * 0.5f;
+                vector3 -= Custom.DirVec(vector2, vector) * Mathf.Lerp(-1f, 1f, num) *
+                           Mathf.Pow(Mathf.InverseLerp(0.5f, 1f, self.player.aerobicLevel), 1.5f) * 0.75f;
+            }
+
+            float num3 = Custom.AimFromOneVectorToAnother(Vector2.Lerp(vector2, vector, 0.5f), vector3);
+            int num4 = Mathf.RoundToInt((Mathf.Abs(num3 / 360f * 34f)));
+
+            if (self.player.sleepCurlUp > 0f)
+            {
+                num4 = 7;
+                num4 = Custom.IntClamp((int) Mathf.Lerp(num4, 4f, self.player.sleepCurlUp), 0, 8);
+            }
+
+            // each if statement from hereon is checking the conditions of several blocks to figure out if num4 changes
+            if (self.player.sleepCurlUp <= 0 && self.owner.room != null && self.owner.EffectiveRoomGravity == 0f)
+            {
+                num4 = 0;
+            }
+            else if (self.player.Consious)
+            {
+                if ((self.player.bodyMode == Player.BodyModeIndex.Stand && self.player.input[0].x != 0) ||
+                    self.player.bodyMode == Player.BodyModeIndex.Crawl)
+                {
+                    num4 = self.player.bodyMode == Player.BodyModeIndex.Crawl ? 7 : 6;
+                }
+            }
+            else
+            {
+                num4 = 0;
+            }
+
+            sLeaser.sprites[3].element = Futile.atlasManager.GetElementWithName("HeadB" + num4);
+        }
+
+
+        // No point in changing anything else in this case
+        if (Plugin.options.onlyCosmetic.Value  || self.player.isNPC)
+        {
+            return;
+        }
+        
+        // PART 2
+        // Some body dimensions need to be outright changed as they are checked with 
+        // slugcatStats instead of isSlugpup. Spearmaster is the only one completely unaffected by this
+        if (self.player.SlugCatClass != MoreSlugcatsEnums.SlugcatStatsName.Gourmand &&
+            self.player.SlugCatClass != MoreSlugcatsEnums.SlugcatStatsName.Spear)
+        {
+            float num = 0.5f +
+                        0.5f * Mathf.Sin(Mathf.Lerp(self.lastBreath, self.breath, timeStacker) * 3.1415927f * 2f);
+            Vector2 vector = Vector2.Lerp(self.drawPositions[0, 1], self.drawPositions[0, 0], timeStacker);
+            Vector2 vector2 = Vector2.Lerp(self.drawPositions[1, 1], self.drawPositions[1, 0], timeStacker);
+            if (self.player.aerobicLevel > 0.5f)
+            {
+                vector += Custom.DirVec(vector2, vector) * Mathf.Lerp(-1f, 1f, num) *
+                          Mathf.InverseLerp(0.5f, 1f, self.player.aerobicLevel) * 0.5f;
+            }
+            float num2 = Mathf.InverseLerp(0.3f, 0.5f, Mathf.Abs(Custom.DirVec(vector2, vector).y));
+            
+            
+            sLeaser.sprites[0].scaleX = 0.9f +
+                0.2f * Mathf.Lerp(self.player.npcStats.Wideness, 0.5f, self.player.playerState.isPup ? 0.5f : 0f) +
+                self.player.sleepCurlUp * 0.2f + 0.05f * num - 0.05f * self.malnourished;
+
+            sLeaser.sprites[1].scaleX = 0.9f +
+                                        0.2f * Mathf.Lerp(self.player.npcStats.Wideness, 0.5f,
+                                            self.player.playerState.isPup ? 0.5f : 0f) +
+                                        Mathf.Lerp(
+                                            Mathf.Lerp(Mathf.Lerp(-0.05f, -0.15f, self.malnourished), 0.05f,
+                                                num) * num2, 0.15f, self.player.sleepCurlUp);
+            
+            
+            // I honestly have no clue what this is checking or why its a property of Player
+            // However, I'm checking everything that can change the values of the pup
+            if (ModManager.CoopAvailable && self.player.bool1)
+            {
+                sLeaser.sprites[0].scaleX += 0.35f;
             }
         }
-        else
+
+        // This is thankfully a much simpler to check transformation. Only spearmaster behaves differently
+        if (self.player.SlugCatClass != MoreSlugcatsEnums.SlugcatStatsName.Spear)
         {
-            num4 = 0;
+            sLeaser.sprites[3].scaleX *= 0.9f + 0.2f * Mathf.Lerp(self.player.npcStats.Wideness, 0.5f,
+                self.player.playerState.isPup ? 0.5f : 0f);
         }
 
-        sLeaser.sprites[3].element = Futile.atlasManager.GetElementWithName("HeadB" + num4);
     }
     
     
