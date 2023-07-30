@@ -1,7 +1,12 @@
-﻿using HarmonyLib;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using HarmonyLib;
+using JollyCoop;
 using RWCustom;
 using UnityEngine;
 using MoreSlugcatsEnums = MoreSlugcats.MoreSlugcatsEnums;
+using Random = UnityEngine.Random;
 
 namespace Pupify.Hooks;
 
@@ -22,6 +27,7 @@ public static class PlayerHooks
         // Stats
         On.Player.GetInitialSlugcatClass += Player_GetInitialSlugcatClass;
         On.SlugcatStats.ctor += SlugcatStats_ctor;
+        On.ShelterDoor.DoorClosed += ShelterDoor_DoorClosed;
         
         // Appearance
         On.PlayerGraphics.ctor += PlayerGraphics_ctor;
@@ -499,6 +505,57 @@ public static class PlayerHooks
                 self.corridorClimbSpeedFac *= (.8f / .84f);
             }
         }
+    }
+    
+    
+    private static void ShelterDoor_DoorClosed(On.ShelterDoor.orig_DoorClosed orig, ShelterDoor self)
+    {
+        // When the game is in a state where coop is enabled, starvation is calculated differently, which
+        // led to a glitch where the player always starves with the introduced food mechanic changes
+        if (!Plugin.options.onlyCosmetic.Value && ModManager.CoopAvailable)
+        {
+            List<PhysicalObject> list = (from x in self.room.physicalObjects.SelectMany(x => x)
+                where x is Player
+                select x).ToList();
+            int num = list.Count;
+            int num2 = 0;
+
+            // Compare to altered food value instead of normal one
+            int y = Plugin.currentSlugcat.foodToHibernate;
+            
+            
+            var flag = num >= self.room.game.PlayersToProgressOrWin.Count;
+            JollyCustom.Log("Player(s) in shelter: " + num + " Survived: " + flag);
+            if (flag)
+            {
+                foreach (PhysicalObject physicalObject in list)
+                {
+                    num2 = Math.Max(((Player) physicalObject).FoodInRoom(self.room, false), num2);
+                }
+                JollyCustom.Log("Survived!, food in room " + num2);
+                foreach (AbstractCreature abstractCreature in self.room.game.Players)
+                {
+                    if (abstractCreature.Room != self.room.abstractRoom)
+                    {
+                        try
+                        {
+                            JollyCustom.WarpAndRevivePlayer(abstractCreature, self.room.abstractRoom,
+                                self.room.LocalCoordinateOfNode(0));
+                        }
+                        catch (Exception arg)
+                        {
+                            JollyCustom.Log($"Could not warp and revive player {abstractCreature} [{arg}]");
+                        }
+                    }
+                }
+                self.room.game.Win(num2 < y);
+                return;
+            }
+            self.room.game.GoToDeathScreen();
+            return;
+        }
+
+        orig(self);
     }
     #endregion
 
