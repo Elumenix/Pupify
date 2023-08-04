@@ -18,6 +18,7 @@ public class Plugin : BaseUnityPlugin
     // Mod-wide fields
 	public static Options options;
     public static SlugcatStats currentSlugcat;
+    public static SlugcatStats secondSlugcat;
     public static bool playerCreated = false;
 
     public Plugin()
@@ -54,9 +55,10 @@ public class Plugin : BaseUnityPlugin
             PlayerHooks.Init();
             SceneHooks.Init();
             MiscHooks.Init();
+            MultiPlayer.Init();
             
             // Test code
-            //On.Player.Update += Player_Update;
+            On.Player.Update += Player_Update;
 
             MachineConnector.SetRegisteredOI("elumenix.pupify", options);
             IsInit = true;
