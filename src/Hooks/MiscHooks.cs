@@ -34,9 +34,9 @@ public static class MiscHooks
             // else the stats reference will be nullified and the game will crash
             Plugin.currentSlugcat = null;
             Plugin.playerCreated = false;
-            Plugin.secondSlugcat = null;
-            MultiPlayer.firstThrough = false;
             MultiPlayer.Session = null;
+            MultiPlayer.startingIncrement = 0;
+            MultiPlayer.currentIndex = 0;
         }
 
         orig(self, ID);

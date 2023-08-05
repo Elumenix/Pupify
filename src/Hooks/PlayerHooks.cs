@@ -336,32 +336,20 @@ public static class PlayerHooks
     private static void SlugcatStats_ctor(On.SlugcatStats.orig_ctor orig, SlugcatStats self, SlugcatStats.Name slugcat,
         bool malnourished)
     {
-        // The else block will run in almost all cases
-        // This handles an edge case where the first player stats is assigned to all players 
-        // because the jolly coop constructor runs the first player through this method an extra time
-        if ((ModManager.JollyCoop && ModManager.CoopAvailable) && Plugin.currentSlugcat != null && MultiPlayer.firstThrough && !Plugin.playerCreated)
+        if (MultiPlayer.startingIncrement >= 2)
         {
-            // This extra call needs to be skipped, but extra variables need to be maneuvered around
-            // because theres no other way to signify that a call to this method was skipped
-            self = Plugin.currentSlugcat;
-            //MultiPlayer.firstThrough = false;
-            Plugin.playerCreated = true;
-            return;
+            MultiPlayer.AddPlayer(self);    
         }
-        else if ((ModManager.JollyCoop && ModManager.CoopAvailable) && Plugin.currentSlugcat != null && MultiPlayer.firstThrough && Plugin.playerCreated)
-        {
-            self = Plugin.currentSlugcat;
-            MultiPlayer.firstThrough = false;
-            Plugin.playerCreated = false;
-        }
-        else
-        {
-            // this will correct body color changes
-            orig(self, slugcat, Plugin.currentSlugcat is {malnourished: true} || malnourished);
-        }
+        
+        SlugcatStats focus = MultiPlayer.GetCurrentPlayer() ?? self;
+
+
+        // this will correct body color changes
+        orig(self, slugcat, self is {malnourished: true} || focus is {malnourished: true} || malnourished);
+
 
         // playerCreated is checked solely in case a slugpup spawns, It prevents the slugpup from copying the player stats
-        if (Plugin.options.onlyCosmetic.Value || (Plugin.playerCreated && !ModManager.JollyCoop)) return;
+        if (Plugin.options.onlyCosmetic.Value || (Plugin.playerCreated && !ModManager.CoopAvailable)) return;
         // This block will run twice, once following the initial creation of the campaign character
         // The second after the creation of the pup. The player actually plays as the pup
         // I store a reference to the first character, who will be instantiated with the correct stats the first time through
@@ -375,10 +363,10 @@ public static class PlayerHooks
         
         
 
-        /*if (Plugin.currentSlugcat == null || (slugcat != MoreSlugcatsEnums.SlugcatStatsName.Slugpup &&
-                                              Plugin.currentSlugcat.name == SlugcatStats.Name.White))
+        /*if (focus == null || (slugcat != MoreSlugcatsEnums.SlugcatStatsName.Slugpup &&
+                                              focus.name == SlugcatStats.Name.White))
         {
-            Plugin.currentSlugcat = self;
+            focus = self;
 
             if (Plugin.options.foodOption.Value == 0) // Calculated
             {
@@ -418,58 +406,42 @@ public static class PlayerHooks
             Plugin.playerCreated = true;
             
             // Don't override the slugpup : malnourishment already calculated
-            self.foodToHibernate = Plugin.currentSlugcat.foodToHibernate;
-            self.maxFood = Plugin.currentSlugcat.maxFood;
+            self.foodToHibernate = focus.foodToHibernate;
+            self.maxFood = focus.maxFood;
         }*/
 
 
         // Stat adjustment option
         if (Plugin.options.statsOption.Value == 0) // Calculated
         {
-            // second condition is added in case food was also adjusted
-            if ((Plugin.currentSlugcat == null || (ModManager.JollyCoop && ModManager.CoopAvailable) && Plugin.secondSlugcat == null && self != Plugin.currentSlugcat) || Plugin.currentSlugcat == self ||
-                (slugcat != MoreSlugcatsEnums.SlugcatStatsName.Slugpup &&
-                 Plugin.currentSlugcat.name == SlugcatStats.Name.White))
+            if (Plugin.currentSlugcat == null)
             {
-                SlugcatStats variableToAlter;
-                if (Plugin.currentSlugcat == null || Plugin.currentSlugcat == self)
-                {
-                    if (Plugin.currentSlugcat != self)
-                    {
-                        MultiPlayer.firstThrough = true;
-                    }
-                    else
-                    {
-                        return;
-                    }
-                    Plugin.currentSlugcat = self;
-                    variableToAlter = self;
-                }
-                else
-                {
-                    Plugin.secondSlugcat = self;
-                    variableToAlter = self;
-                }
-                
-
+                Plugin.currentSlugcat = self;
+                focus = self;
+            }
+            // second condition is added in case food was also adjusted
+            if ((focus == self || !Plugin.playerCreated && (ModManager.JollyCoop && ModManager.CoopAvailable)) ||
+                (slugcat != MoreSlugcatsEnums.SlugcatStatsName.Slugpup &&
+                 focus.name == SlugcatStats.Name.White))
+            {
                 // Stat adjustments
-                self.runspeedFac = variableToAlter.runspeedFac * .8f * (.8f / .84f); // NPCStats interferes
-                self.bodyWeightFac = variableToAlter.bodyWeightFac * .65f * (.65f / .63375f); // NPCStats interferes
-                self.generalVisibilityBonus = variableToAlter.generalVisibilityBonus - .2f; // Very simple adjustment
+                self.runspeedFac = focus.runspeedFac * .8f * (.8f / .84f); // NPCStats interferes
+                self.bodyWeightFac = focus.bodyWeightFac * .65f * (.65f / .63375f); // NPCStats interferes
+                self.generalVisibilityBonus = focus.generalVisibilityBonus - .2f; // Very simple adjustment
                 self.visualStealthInSneakMode =
-                    variableToAlter.visualStealthInSneakMode *
+                    focus.visualStealthInSneakMode *
                     1.2f; // Alternative was +.1f, but I thought scaling was better
-                self.loudnessFac = variableToAlter.loudnessFac * .5f; // Probably the simplest to think about
+                self.loudnessFac = focus.loudnessFac * .5f; // Probably the simplest to think about
                 self.lungsFac =
-                    variableToAlter.lungsFac *
+                    focus.lungsFac *
                     .8f; // This is the only improvement, all slugpups have better lung capacities 
                 self.poleClimbSpeedFac =
-                    variableToAlter.poleClimbSpeedFac * .8f * (.8f / .836f); // NPCStats interferes
+                    focus.poleClimbSpeedFac * .8f * (.8f / .836f); // NPCStats interferes
                 self.corridorClimbSpeedFac =
-                    variableToAlter.corridorClimbSpeedFac * .8f * (.8f / .84f); // NPCStats interferes
+                    focus.corridorClimbSpeedFac * .8f * (.8f / .84f); // NPCStats interferes
 
                 // This is a weird one because it's such a big difference, but it is only an int and doesn't vary much
-                self.throwingSkill = variableToAlter.throwingSkill - 1;
+                self.throwingSkill = focus.throwingSkill - 1;
                 if (self.throwingSkill < 0)
                 {
                     self.throwingSkill = 0;
@@ -477,43 +449,24 @@ public static class PlayerHooks
             }
             else 
             {
-                if (Plugin.playerCreated == true)
-                {
-                    self.runspeedFac = Plugin.secondSlugcat.runspeedFac;
-                    self.bodyWeightFac = Plugin.secondSlugcat.bodyWeightFac;
-                    self.generalVisibilityBonus = Plugin.secondSlugcat.generalVisibilityBonus;
-                    self.visualStealthInSneakMode = Plugin.secondSlugcat.visualStealthInSneakMode;
-                    self.loudnessFac = Plugin.secondSlugcat.loudnessFac;
-                    self.lungsFac = Plugin.secondSlugcat.lungsFac;
-                    self.poleClimbSpeedFac = Plugin.secondSlugcat.poleClimbSpeedFac;
-                    self.corridorClimbSpeedFac = Plugin.secondSlugcat.corridorClimbSpeedFac;
-                    self.throwingSkill = Plugin.secondSlugcat.throwingSkill;
-                }
-                else
-                {
-                    Plugin.playerCreated = true;
-
-                    // Apply all values to pup
-                    self.runspeedFac = Plugin.currentSlugcat.runspeedFac;
-                    self.bodyWeightFac = Plugin.currentSlugcat.bodyWeightFac;
-                    self.generalVisibilityBonus = Plugin.currentSlugcat.generalVisibilityBonus;
-                    self.visualStealthInSneakMode = Plugin.currentSlugcat.visualStealthInSneakMode;
-                    self.loudnessFac = Plugin.currentSlugcat.loudnessFac;
-                    self.lungsFac = Plugin.currentSlugcat.lungsFac;
-                    self.poleClimbSpeedFac = Plugin.currentSlugcat.poleClimbSpeedFac;
-                    self.corridorClimbSpeedFac = Plugin.currentSlugcat.corridorClimbSpeedFac;
-                    self.throwingSkill = Plugin.currentSlugcat.throwingSkill;
-                }
+                // Apply all values to pup
+                self.runspeedFac = focus.runspeedFac;
+                self.bodyWeightFac = focus.bodyWeightFac;
+                self.generalVisibilityBonus = focus.generalVisibilityBonus;
+                self.visualStealthInSneakMode = focus.visualStealthInSneakMode;
+                self.loudnessFac = focus.loudnessFac;
+                self.lungsFac = focus.lungsFac;
+                self.poleClimbSpeedFac = focus.poleClimbSpeedFac;
+                self.corridorClimbSpeedFac = focus.corridorClimbSpeedFac;
+                self.throwingSkill = focus.throwingSkill;
             }
         }
         else if (Plugin.options.statsOption.Value == 1) // Original
         {
-            if (Plugin.currentSlugcat == null || Plugin.currentSlugcat == self ||
+            if (focus == null || focus == self ||
                 (slugcat != MoreSlugcatsEnums.SlugcatStatsName.Slugpup &&
-                 Plugin.currentSlugcat.name == SlugcatStats.Name.White))
+                 focus.name == SlugcatStats.Name.White))
             {
-                Plugin.currentSlugcat = self;
-
                 // Stat adjustments, just offset npcStats adjustment
                 self.runspeedFac *= (.8f / .84f); 
                 self.bodyWeightFac *= (.65f / .63375f);
@@ -522,53 +475,25 @@ public static class PlayerHooks
             }
             else
             {
-                if (Plugin.playerCreated == true)
-                {
-                    self.runspeedFac = Plugin.secondSlugcat.runspeedFac;
-                    self.bodyWeightFac = Plugin.secondSlugcat.bodyWeightFac;
-                    self.generalVisibilityBonus = Plugin.secondSlugcat.generalVisibilityBonus;
-                    self.visualStealthInSneakMode = Plugin.secondSlugcat.visualStealthInSneakMode;
-                    self.loudnessFac = Plugin.secondSlugcat.loudnessFac;
-                    self.lungsFac = Plugin.secondSlugcat.lungsFac;
-                    self.poleClimbSpeedFac = Plugin.secondSlugcat.poleClimbSpeedFac;
-                    self.corridorClimbSpeedFac = Plugin.secondSlugcat.corridorClimbSpeedFac;
-                    self.throwingSkill = Plugin.secondSlugcat.throwingSkill;
-                }
-                else
-                {
-                    Plugin.playerCreated = true;
-
-                    // Apply all values to pup
-                    self.runspeedFac = Plugin.currentSlugcat.runspeedFac;
-                    self.bodyWeightFac = Plugin.currentSlugcat.bodyWeightFac;
-                    self.generalVisibilityBonus = Plugin.currentSlugcat.generalVisibilityBonus;
-                    self.visualStealthInSneakMode = Plugin.currentSlugcat.visualStealthInSneakMode;
-                    self.loudnessFac = Plugin.currentSlugcat.loudnessFac;
-                    self.lungsFac = Plugin.currentSlugcat.lungsFac;
-                    self.poleClimbSpeedFac = Plugin.currentSlugcat.poleClimbSpeedFac;
-                    self.corridorClimbSpeedFac = Plugin.currentSlugcat.corridorClimbSpeedFac;
-                    self.throwingSkill = Plugin.currentSlugcat.throwingSkill;
-                }
+                // Apply all values to pup
+                self.runspeedFac = focus.runspeedFac;
+                self.bodyWeightFac = focus.bodyWeightFac;
+                self.generalVisibilityBonus = focus.generalVisibilityBonus;
+                self.visualStealthInSneakMode = focus.visualStealthInSneakMode;
+                self.loudnessFac = focus.loudnessFac;
+                self.lungsFac = focus.lungsFac;
+                self.poleClimbSpeedFac = focus.poleClimbSpeedFac;
+                self.corridorClimbSpeedFac = focus.corridorClimbSpeedFac;
+                self.throwingSkill = focus.throwingSkill;
             }
         }
         else // Pup Route
         {
-            if (Plugin.currentSlugcat == null || Plugin.currentSlugcat == self ||
-                (slugcat != MoreSlugcatsEnums.SlugcatStatsName.Slugpup &&
-                 Plugin.currentSlugcat.name == SlugcatStats.Name.White))
-            {
-                Plugin.currentSlugcat = self;
-            }
-            else
-            {
-                Plugin.playerCreated = true;
-                
                 // Essentially default values are used, this combats npcStats constructor changing player values
                 self.runspeedFac *= (.8f / .84f); 
                 self.bodyWeightFac *= (.65f / .63375f);
                 self.poleClimbSpeedFac *= (.8f / .836f); 
                 self.corridorClimbSpeedFac *= (.8f / .84f);
-            }
         }
     }
     
