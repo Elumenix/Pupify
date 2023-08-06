@@ -324,7 +324,7 @@ public static class PlayerHooks
         if (!self.isNPC && !(ModManager.CoopAvailable && self.abstractCreature.Room.world.game.IsStorySession) &&
             !(!ModManager.MSC || self.abstractCreature.Room.world.game.IsStorySession) && self.slugcatStats == null)
         {
-            if (MultiPlayer.Session is ArenaGameSession)
+            if (MultiPlayer.Session is not StoryGameSession)
             {
                 // Usually I would use MultiPlayer.currentIndex, but apparently players are loaded
                 // in a random order so I need to use their ID values instead; 
@@ -348,7 +348,7 @@ public static class PlayerHooks
     {
         // The first check is for story mode, the rest are for arena mode, because it needs to be different apparently
         if (MultiPlayer.startingIncrement >= 2 || MultiPlayer.Session != null &&
-            (MultiPlayer.Session.game.IsArenaSession || MultiPlayer.Session is CompetitiveGameSession) && MultiPlayer.startingIncrement >= 1)
+            MultiPlayer.Session is not StoryGameSession && MultiPlayer.startingIncrement >= 1)
         {
             MultiPlayer.AddPlayer(self);    
         }

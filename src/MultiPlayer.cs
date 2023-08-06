@@ -25,13 +25,13 @@ public static class MultiPlayer
     #region Stats Handling
     public static SlugcatStats GetCurrentPlayer()
     {
-        if (ModManager.CoopAvailable || Session.game.IsArenaSession || Session is CompetitiveGameSession)
+        if (ModManager.CoopAvailable || Session is not StoryGameSession)
         {
             int check;
             if (Session != null)
             {
                 // A number of false character creations are made depending on the mode
-                check = Session is CompetitiveGameSession ? 1 : 2;
+                check = Session is not StoryGameSession ? 1 : 2;
             }
             else
             {
@@ -68,6 +68,13 @@ public static class MultiPlayer
         }
         else
         {
+            // Sandbox/Challenge pathway
+            if (!Session.game.IsStorySession)
+            {
+                startingIncrement++;
+            }
+            
+            // Also Single Player story mode
             return Plugin.currentSlugcat;
         }
     }
