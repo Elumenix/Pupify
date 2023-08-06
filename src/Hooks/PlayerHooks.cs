@@ -324,11 +324,12 @@ public static class PlayerHooks
         if (!self.isNPC && !(ModManager.CoopAvailable && self.abstractCreature.Room.world.game.IsStorySession) &&
             !(!ModManager.MSC || self.abstractCreature.Room.world.game.IsStorySession) && self.slugcatStats == null)
         {
-            if (MultiPlayer.Session is ArenaGameSession session)
+            if (MultiPlayer.Session is ArenaGameSession)
             {
-                self.SlugCatClass = MultiPlayer.currentIndex == 0
-                    ? MultiPlayer.GetSpecificPlayer(session.arenaSitting.players.Count - 1).name
-                    : MultiPlayer.GetSpecificPlayer(MultiPlayer.currentIndex - 1).name;
+                // Usually I would use MultiPlayer.currentIndex, but apparently players are loaded
+                // in a random order so I need to use their ID values instead; 
+                self.SlugCatClass = MultiPlayer.GetSpecificPlayer(self.abstractCreature.ID.number).name;
+                MultiPlayer.playerToLoad = self.abstractCreature.ID.number;
             }
             else
             {
@@ -351,8 +352,18 @@ public static class PlayerHooks
         {
             MultiPlayer.AddPlayer(self);    
         }
-        
-        SlugcatStats focus = MultiPlayer.GetCurrentPlayer() ?? self;
+
+        SlugcatStats focus;
+
+        // Players are created in a random order in multiplayer so stats are assigned accordingly
+        if (MultiPlayer.Session is ArenaGameSession && Plugin.playersCreated)
+        {
+            focus = MultiPlayer.GetSpecificPlayer(MultiPlayer.playerToLoad);
+        }
+        else
+        {
+            focus = MultiPlayer.GetCurrentPlayer() ?? self;
+        }
 
 
         // this will correct body color changes
@@ -376,8 +387,7 @@ public static class PlayerHooks
         
         
 
-        /*if (focus == null || (slugcat != MoreSlugcatsEnums.SlugcatStatsName.Slugpup &&
-                                              focus.name == SlugcatStats.Name.White))
+        /*if (focus == null)
         {
             focus = self;
 
@@ -434,9 +444,7 @@ public static class PlayerHooks
             }
             
             
-            if ((focus == self || !Plugin.playersCreated && (ModManager.JollyCoop && ModManager.CoopAvailable)) ||
-                (slugcat != MoreSlugcatsEnums.SlugcatStatsName.Slugpup &&
-                 focus.name == SlugcatStats.Name.White))
+            if (focus == self || !Plugin.playersCreated && ModManager.JollyCoop && ModManager.CoopAvailable)
             {
                 // Stat adjustments
                 self.runspeedFac = focus.runspeedFac * .8f * (.8f / .84f); // NPCStats interferes
@@ -477,9 +485,7 @@ public static class PlayerHooks
         }
         else if (Plugin.options.statsOption.Value == 1) // Original
         {
-            if (focus == null || focus == self ||
-                (slugcat != MoreSlugcatsEnums.SlugcatStatsName.Slugpup &&
-                 focus.name == SlugcatStats.Name.White))
+            if (focus == null || focus == self)
             {
                 // Stat adjustments, just offset npcStats adjustment
                 self.runspeedFac *= (.8f / .84f); 

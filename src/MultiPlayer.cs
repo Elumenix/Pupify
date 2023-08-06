@@ -11,6 +11,7 @@ public static class MultiPlayer
     private static List<SlugcatStats> playerStats = new();
     public static int startingIncrement;
     public static int currentIndex;
+    public static int playerToLoad;
     
 
     public static void Init()
