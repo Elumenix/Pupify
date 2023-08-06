@@ -286,7 +286,7 @@ public static class PlayerHooks
             }
 
             // This looks ugly, but it is what it is
-            return Plugin.options.letEatMeat.Value && (orig(self, crit) || (!(crit is IPlayerEdible) && crit.dead && 
+            return Plugin.options.letEatMeat.Value && (orig(self, crit) || (crit is not IPlayerEdible && crit.dead && 
                                                                             (self.SlugCatClass ==
                                                                              SlugcatStats.Name.Red ||
                                                                              (ModManager.MSC &&
@@ -303,7 +303,7 @@ public static class PlayerHooks
                                                                                    .SlugcatStatsName
                                                                                    .Sofanthiel))) &&
                                                                             (!ModManager.CoopAvailable ||
-                                                                             !(crit is Player)) &&
+                                                                             crit is not Player) &&
                                                                             (!ModManager.MSC ||
                                                                              self.pyroJumpCooldown <= 60f)));
         }
@@ -324,7 +324,16 @@ public static class PlayerHooks
         if (!self.isNPC && !(ModManager.CoopAvailable && self.abstractCreature.Room.world.game.IsStorySession) &&
             !(!ModManager.MSC || self.abstractCreature.Room.world.game.IsStorySession) && self.slugcatStats == null)
         {
-            self.SlugCatClass = Plugin.currentSlugcat.name;
+            if (MultiPlayer.Session is ArenaGameSession session)
+            {
+                self.SlugCatClass = MultiPlayer.currentIndex == 0
+                    ? MultiPlayer.GetSpecificPlayer(session.arenaSitting.players.Count - 1).name
+                    : MultiPlayer.GetSpecificPlayer(MultiPlayer.currentIndex - 1).name;
+            }
+            else
+            {
+                self.SlugCatClass = Plugin.currentSlugcat.name;
+            }
         }
         else
         {
@@ -336,7 +345,9 @@ public static class PlayerHooks
     private static void SlugcatStats_ctor(On.SlugcatStats.orig_ctor orig, SlugcatStats self, SlugcatStats.Name slugcat,
         bool malnourished)
     {
-        if (MultiPlayer.startingIncrement >= 2)
+        // The first check is for story mode, the rest are for arena mode, because it needs to be different apparently
+        if (MultiPlayer.startingIncrement >= 2 || MultiPlayer.Session != null &&
+            (MultiPlayer.Session.game.IsArenaSession || MultiPlayer.Session is CompetitiveGameSession) && MultiPlayer.startingIncrement >= 1)
         {
             MultiPlayer.AddPlayer(self);    
         }
@@ -349,7 +360,9 @@ public static class PlayerHooks
 
 
         // playerCreated is checked solely in case a slugpup spawns, It prevents the slugpup from copying the player stats
-        if (Plugin.options.onlyCosmetic.Value || (Plugin.playerCreated && !ModManager.CoopAvailable)) return;
+        if (Plugin.options.onlyCosmetic.Value || (Plugin.playersCreated && !ModManager.CoopAvailable &&
+                                                  MultiPlayer.Session is not ArenaGameSession)) return;
+        
         // This block will run twice, once following the initial creation of the campaign character
         // The second after the creation of the pup. The player actually plays as the pup
         // I store a reference to the first character, who will be instantiated with the correct stats the first time through
@@ -419,8 +432,9 @@ public static class PlayerHooks
                 Plugin.currentSlugcat = self;
                 focus = self;
             }
-            // second condition is added in case food was also adjusted
-            if ((focus == self || !Plugin.playerCreated && (ModManager.JollyCoop && ModManager.CoopAvailable)) ||
+            
+            
+            if ((focus == self || !Plugin.playersCreated && (ModManager.JollyCoop && ModManager.CoopAvailable)) ||
                 (slugcat != MoreSlugcatsEnums.SlugcatStatsName.Slugpup &&
                  focus.name == SlugcatStats.Name.White))
             {
@@ -682,10 +696,10 @@ public static class PlayerHooks
     private static Color Player_ShortCutColor(On.Player.orig_ShortCutColor orig, Player self)
     {
         int ID = self.abstractCreature.ID.RandomSeed;
-        if (!Plugin.options.onlyCosmetic.Value && Plugin.currentSlugcat != null && self.SlugCatClass == Plugin.currentSlugcat.name &&
+        if (!ModManager.CoopAvailable && !Plugin.options.onlyCosmetic.Value && !self.isNPC &&
             !self.isNPC && ID != 1000 && ID != 1001 && ID != 1002) // Artificer cutscene IDs
         {
-            return PlayerGraphics.SlugcatColor(Plugin.currentSlugcat.name);
+            return PlayerGraphics.SlugcatColor(self.SlugCatClass);
         }
 
         return orig(self);

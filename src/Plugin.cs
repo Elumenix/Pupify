@@ -18,7 +18,7 @@ public class Plugin : BaseUnityPlugin
     // Mod-wide fields
 	public static Options options;
     public static SlugcatStats currentSlugcat;
-    public static bool playerCreated = false;
+    public static bool playersCreated = false;
 
     public Plugin()
     {
