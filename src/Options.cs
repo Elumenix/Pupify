@@ -23,6 +23,9 @@ public class Options : OptionInterface
         letEatMeat = config.Bind("letEatMeat", false);
         holdHands = config.Bind("holdHands", false);
         letPickup = config.Bind("letPickup", false);
+        overrideFood = config.Bind("overrideFood", false);
+        foodToHibernate = config.Bind("foodToHibernate", 2f);
+        maxFood = config.Bind("maxFood", 3f);
     }
 
     public readonly Configurable<bool> onlyCosmetic;
@@ -34,6 +37,9 @@ public class Options : OptionInterface
     public readonly Configurable<bool> letMaul;
     public readonly Configurable<bool> holdHands;
     public readonly Configurable<bool> letPickup;
+    public readonly Configurable<bool> overrideFood;
+    public readonly Configurable<float> foodToHibernate;
+    public readonly Configurable<float> maxFood;
 
 
     private UIelement[] UIArrPlayerOptions;
@@ -54,10 +60,59 @@ public class Options : OptionInterface
 
         // I would have loved any sort of documentation to figure this out
         foodGroup = new OpRadioButtonGroup(foodOption);
-        foodGroup.SetButtons(new OpRadioButton[] {new(100f, 403f){description = "All food meters are scaled down to what might be expected from that slugcat as a pup.\nAs the basis of the scaling, survivor has the same food meter as a base slugpup."}, new(300f, 403f){description = "The food meter for the current slugcat will remain unaltered."}, new(500f, 403f){description = "Use the base slugpup food meter.\nThe player will need their bar at least two thirds full to hibernate."}});
+        foodGroup.SetButtons(new OpRadioButton[]
+        {
+            new(100f, 403f)
+            {
+                description =
+                    "All food meters are scaled down to what might be expected from that slugcat as a pup." +
+                    "\nAs the basis of the scaling, survivor has the same food meter as a base slugpup."
+            },
+            new(300f, 403f) {description = "The food meter for the current slugcat will remain unaltered."},
+            new(500f, 403f)
+            {
+                description =
+                    "Use the base slugpup food meter.\nThe player will need their bar at least two thirds full to hibernate."
+            }
+        });
         statGroup = new OpRadioButtonGroup(statsOption);
-        statGroup.SetButtons(new OpRadioButton[] {new(100f, 303f){description = "All stats are scaled down to what might be expected from that slugcat as a pup.\nAs the basis of the scaling, survivor has the same stats as an non-randomized base slugpup."}, new(300f, 303f){description = "The stats of the current slugcat will remain unaltered.\nNote that, as it isn't a stat, jumping will still be worse. This can only be changed using cosmetic mode."}, new(500f, 303f){description = "All slugcats will have the same stats as a a base non-randomized slugpup.\nNon-randomized stats (put very simply) are the middle value of each stat in the range that a slugpup could have for it. Not being randomized is not a penalty."}});
+        statGroup.SetButtons(new OpRadioButton[]
+        {
+            new(100f, 303f)
+            {
+                description =
+                    "All stats are scaled down to what might be expected from that slugcat as a pup.\n" +
+                    "As the basis of the scaling, survivor has the same stats as an non-randomized base slugpup."
+            },
+            new(300f, 303f)
+            {
+                description =
+                    "The stats of the current slugcat will remain unaltered.\n" +
+                    "Note that, as it isn't a stat, jumping will still be worse. This can only be changed using cosmetic mode."
+            },
+            new(500f, 303f)
+            {
+                description =
+                    "All slugcats will have the same stats as a a base non-randomized slugpup.\n" +
+                    "Non-randomized stats (put very simply) are the middle value of each stat in the range that a " +
+                    "slugpup could have for it. Not being randomized is not a penalty."
+            }
+        });
+        
+        // OpUpdown has an int constructor that I should be using, however its completely broken and will crash the program
+        OpUpdown minFood = new OpUpdown(foodToHibernate, new Vector2(160f,152f), 60f, 0)
+        {
+            description = "How much must be consumed before hibernation is allowed?",
+            _fMax = 20,
+            _fMin = 1
+        };
 
+        OpUpdown maximumFood = new OpUpdown(maxFood, new Vector2(390f,152f), 60f, 0)
+        {
+            description = "How much may be consumed in total?",
+            _fMax = 20,
+            _fMin = 1
+        };
         
         UIArrPlayerOptions = new UIelement[]
         {
@@ -92,6 +147,17 @@ public class Options : OptionInterface
             new OpLabel(440f, 303f, "Slugpup"),
             
             
+            new OpLabel(10f, 200f, "Override Food Values:", true),
+            new OpCheckBox(overrideFood, 230f, 200f)
+            {
+                description = "Recommended for Coop \n Allows you to customize the limits of the black hole in a slugcats stomach."
+            },
+            
+            minFood,
+            maximumFood,
+            new OpLabel(50f, 160f, "Hibernation Limit"),
+            new OpLabel(310f, 160f, "Meter Limit"),
+                
             new OpLabel(10, 400, "Great! You don't need any other options.", true){color = new Color(0.85f,0.2f,0.4f)}
         };
         opTab.AddItems(UIArrPlayerOptions);
@@ -141,8 +207,8 @@ public class Options : OptionInterface
 			new OpLabel(295f, 510f, "Slugpups generally lose access to major abilities. \n\n\nThey can be re-enabled here."),
 
             
-			new OpRect(new Vector2(282f, 223f), new Vector2(195f, 105f)),
-			new OpCheckBox(bothHands, new Vector2(360f, 260f))
+			new OpRect(new Vector2(282f, 223f), new Vector2(196f, 105f)),
+			new OpCheckBox(bothHands, new Vector2(368f, 260f))
 			{
 				description = "Unlock the use of your second set of digits."
 			},
@@ -153,6 +219,27 @@ public class Options : OptionInterface
 
     public override void Update()
     {
+        // I think this prevents crashing due to typing, not completely sure on that though
+        ((OpUpdown) UIArrPlayerOptions[23]).InScrollBox = false;
+        ((OpUpdown) UIArrPlayerOptions[24]).InScrollBox = false;
+        
+        // Make sure the max isn't smaller than the hibernation value 
+        if (((OpUpdown) UIArrPlayerOptions[23]).MouseOver && ((OpUpdown) UIArrPlayerOptions[23]).valueFloat >
+            ((OpUpdown) UIArrPlayerOptions[24]).valueFloat)
+        {
+            ((OpUpdown) UIArrPlayerOptions[24]).SetValueFloat(((OpUpdown) UIArrPlayerOptions[23]).valueFloat);
+        }
+        else if (((OpUpdown) UIArrPlayerOptions[24]).MouseOver && ((OpUpdown) UIArrPlayerOptions[24]).valueFloat <
+                 ((OpUpdown) UIArrPlayerOptions[23]).valueFloat)
+        {
+            ((OpUpdown) UIArrPlayerOptions[23]).SetValueFloat(((OpUpdown) UIArrPlayerOptions[24]).valueFloat);
+        }
+        else if (((OpUpdown) UIArrPlayerOptions[23]).valueFloat > ((OpUpdown) UIArrPlayerOptions[24]).valueFloat)
+        {
+            ((OpUpdown) UIArrPlayerOptions[24]).SetValueFloat(((OpUpdown) UIArrPlayerOptions[23]).valueFloat);
+        }
+        
+        
 	    if (((OpCheckBox)UIArrPlayerOptions[2]).GetValueBool())
         {
             for (int i = 3; i < UIArrPlayerOptions.Length; i++)
@@ -172,6 +259,24 @@ public class Options : OptionInterface
             UIArrPlayerModify[1].Hide();
             UIArrPlayerModify[0].Show();
             UIArrPlayerOptions[UIArrPlayerOptions.Length - 1].Hide(); 
+        }
+
+        for (int i = 3; i <= 11; i++)
+        {
+            if (((OpCheckBox)UIArrPlayerOptions[22]).GetValueBool())
+            {
+                if (UIArrPlayerOptions[i] is UIfocusable iFocusable)
+                {
+                    iFocusable.greyedOut = true;
+                }
+            }
+            else
+            {
+                if (UIArrPlayerOptions[i] is UIfocusable iFocusable)
+                {
+                    iFocusable.greyedOut = false;
+                }
+            }
         }
     }
 }
