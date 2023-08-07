@@ -364,9 +364,8 @@ public static class PlayerHooks
         {
             focus = MultiPlayer.GetCurrentPlayer() ?? self;
         }
-
-
-        // this will correct body color changes
+        
+        // Calling the original just corrects body color changes, all important stats get overwritten after
         orig(self, slugcat, self is {malnourished: true} || focus is {malnourished: true} || malnourished);
 
 
@@ -380,121 +379,132 @@ public static class PlayerHooks
         // When the NPCStats method runs, after the program realizes I set the player to be treated as a pup, the 
         // method creates a new slugCatStats for the player. The second time through overwrites those stats directly
         // This is how both stat calculation rules work. Natural slugpup rules will instead not overwrite on the second run
-            
-        // Arena works slightly differently in that the game established everyone as a Survivor first, then changes 
-        // their stats & class afterwards, so secondary checks are to allow the stats to get overwritten
-        // Otherwise, depending on implementation, the game either crashes or spawns everyone as a survivor pup
         
-        
-
-        /*if (focus == null)
+        if (focus == self)
         {
-            focus = self;
-
-            if (Plugin.options.foodOption.Value == 0) // Calculated
+            switch (Plugin.options.foodOption.Value)
             {
-                // Malnourishment has already been accounted for at this point
+                // Calculated
+                case 0:
+                {
+                    if (Plugin.currentSlugcat == null)
+                    {
+                        Plugin.currentSlugcat = self;
+                        focus = self;
+                    }
                     
-                float percentRequired = (float) self.foodToHibernate / self.maxFood;
-                self.maxFood = Mathf.RoundToInt(self.maxFood * (3f / 7f));
-                self.foodToHibernate =
-                    Mathf.RoundToInt(self.maxFood * percentRequired * (7f / 6f));
+                    // Malnourishment has already been accounted for at this point
+                    float percentRequired = (float) self.foodToHibernate / self.maxFood;
+                    self.maxFood = Mathf.RoundToInt(self.maxFood * (3f / 7f));
+                    self.foodToHibernate =
+                        Mathf.RoundToInt(self.maxFood * percentRequired * (7f / 6f));
 
 
-                // This may happen with a custom slugcat with ludicrously high food values
-                if (self.foodToHibernate > self.maxFood)
-                {
-                    self.foodToHibernate = self.maxFood;
+                    // This may happen with a custom slugcat with ludicrously high food values
+                    if (self.foodToHibernate > self.maxFood)
+                    {
+                        self.foodToHibernate = self.maxFood;
+                    }
+
+                    break;
                 }
-            }
-            else if (Plugin.options.foodOption.Value == 2) // Pup
-            {
-                // This doesn't use previous values, so malnourished 
-                // needs to be hard-coded
-                if (malnourished)
-                {
+                
+                // Pup
+                // This doesn't use previous values, so malnourished needs to be hard-coded
+                case 2 when malnourished:
                     self.foodToHibernate = 3;
                     self.maxFood = 3;
-                }
-                else
-                {
+                    break;
+                case 2:
                     self.foodToHibernate = 2;
                     self.maxFood = 3;
-                }
+                    break;
+                
+                // default: don't override the value : Original
             }
-            // Else, don't override the value : Original
         }
         else
         {
-            Plugin.playerCreated = true;
-            
             // Don't override the slugpup : malnourishment already calculated
-            self.foodToHibernate = focus.foodToHibernate;
-            self.maxFood = focus.maxFood;
-        }*/
-
-
-        // Stat adjustment option
-        if (Plugin.options.statsOption.Value == 0) // Calculated
-        {
-            if (Plugin.currentSlugcat == null)
+            if (!ModManager.JollyCoop)
             {
-                Plugin.currentSlugcat = self;
-                focus = self;
+                self.foodToHibernate = focus.foodToHibernate;
+                self.maxFood = focus.maxFood;
             }
-            
-            
-            if (focus == self || !Plugin.playersCreated && ModManager.JollyCoop && ModManager.CoopAvailable)
+            else
             {
-                // Stat adjustments
-                self.runspeedFac = focus.runspeedFac * .8f * (.8f / .84f); // NPCStats interferes
-                self.bodyWeightFac = focus.bodyWeightFac * .65f * (.65f / .63375f); // NPCStats interferes
-                self.generalVisibilityBonus = focus.generalVisibilityBonus - .2f; // Very simple adjustment
-                self.visualStealthInSneakMode =
-                    focus.visualStealthInSneakMode *
-                    1.2f; // Alternative was +.1f, but I thought scaling was better
-                self.loudnessFac = focus.loudnessFac * .5f; // Probably the simplest to think about
-                self.lungsFac =
-                    focus.lungsFac *
-                    .8f; // This is the only improvement, all slugpups have better lung capacities 
-                self.poleClimbSpeedFac =
-                    focus.poleClimbSpeedFac * .8f * (.8f / .836f); // NPCStats interferes
-                self.corridorClimbSpeedFac =
-                    focus.corridorClimbSpeedFac * .8f * (.8f / .84f); // NPCStats interferes
-
-                // This is a weird one because it's such a big difference, but it is only an int and doesn't vary much
-                self.throwingSkill = focus.throwingSkill - 1;
-                if (self.throwingSkill < 0)
-                {
-                    self.throwingSkill = 0;
-                }
-            }
-            else 
-            {
-                // Apply all values to pup
-                self.runspeedFac = focus.runspeedFac;
-                self.bodyWeightFac = focus.bodyWeightFac;
-                self.generalVisibilityBonus = focus.generalVisibilityBonus;
-                self.visualStealthInSneakMode = focus.visualStealthInSneakMode;
-                self.loudnessFac = focus.loudnessFac;
-                self.lungsFac = focus.lungsFac;
-                self.poleClimbSpeedFac = focus.poleClimbSpeedFac;
-                self.corridorClimbSpeedFac = focus.corridorClimbSpeedFac;
-                self.throwingSkill = focus.throwingSkill;
+                // For jolly coop, different foodBar values mean that all players have different
+                // values for starvation, and some might not even be able to reach their min value
+                // if player one has a smaller min value than them. Standardizing it to the campaign
+                // slugcat standardizes starving for everyone and simplifies the food screen
+                self.foodToHibernate = Plugin.currentSlugcat.foodToHibernate;
+                self.maxFood = Plugin.currentSlugcat.maxFood;
             }
         }
-        else if (Plugin.options.statsOption.Value == 1) // Original
+
+
+        switch (Plugin.options.statsOption.Value)
         {
-            if (focus == null || focus == self)
+            // Stat adjustment option
+            // Calculated
+            case 0:
             {
+                if (Plugin.currentSlugcat == null)
+                {
+                    Plugin.currentSlugcat = self;
+                    focus = self;
+                }
+            
+                if (focus == self || !Plugin.playersCreated && ModManager.JollyCoop && ModManager.CoopAvailable)
+                {
+                    // Stat adjustments
+                    self.runspeedFac = focus.runspeedFac * .8f * (.8f / .84f); // NPCStats interferes
+                    self.bodyWeightFac = focus.bodyWeightFac * .65f * (.65f / .63375f); // NPCStats interferes
+                    self.generalVisibilityBonus = focus.generalVisibilityBonus - .2f; // Very simple adjustment
+                    self.visualStealthInSneakMode =
+                        focus.visualStealthInSneakMode *
+                        1.2f; // Alternative was +.1f, but I thought scaling was better
+                    self.loudnessFac = focus.loudnessFac * .5f; // Probably the simplest to think about
+                    self.lungsFac =
+                        focus.lungsFac *
+                        .8f; // This is the only improvement, all slugpups have better lung capacities 
+                    self.poleClimbSpeedFac =
+                        focus.poleClimbSpeedFac * .8f * (.8f / .836f); // NPCStats interferes
+                    self.corridorClimbSpeedFac =
+                        focus.corridorClimbSpeedFac * .8f * (.8f / .84f); // NPCStats interferes
+
+                    // This is a weird one because it's such a big difference, but it is only an int and doesn't vary much
+                    self.throwingSkill = focus.throwingSkill - 1;
+                    if (self.throwingSkill < 0)
+                    {
+                        self.throwingSkill = 0;
+                    }
+                }
+                else 
+                {
+                    // Apply all values to pup
+                    self.runspeedFac = focus.runspeedFac;
+                    self.bodyWeightFac = focus.bodyWeightFac;
+                    self.generalVisibilityBonus = focus.generalVisibilityBonus;
+                    self.visualStealthInSneakMode = focus.visualStealthInSneakMode;
+                    self.loudnessFac = focus.loudnessFac;
+                    self.lungsFac = focus.lungsFac;
+                    self.poleClimbSpeedFac = focus.poleClimbSpeedFac;
+                    self.corridorClimbSpeedFac = focus.corridorClimbSpeedFac;
+                    self.throwingSkill = focus.throwingSkill;
+                }
+                break;
+            }
+            
+            // Original
+            case 1 when focus == null || focus == self:
                 // Stat adjustments, just offset npcStats adjustment
                 self.runspeedFac *= (.8f / .84f); 
                 self.bodyWeightFac *= (.65f / .63375f);
                 self.poleClimbSpeedFac *= (.8f / .836f); 
                 self.corridorClimbSpeedFac *= (.8f / .84f);
-            }
-            else
-            {
+                break;
+            case 1:
                 // Apply all values to pup
                 self.runspeedFac = focus.runspeedFac;
                 self.bodyWeightFac = focus.bodyWeightFac;
@@ -505,15 +515,16 @@ public static class PlayerHooks
                 self.poleClimbSpeedFac = focus.poleClimbSpeedFac;
                 self.corridorClimbSpeedFac = focus.corridorClimbSpeedFac;
                 self.throwingSkill = focus.throwingSkill;
-            }
-        }
-        else // Pup Route
-        {
+                break;
+            
+            // Pup Route
+            default:
                 // Essentially default values are used, this combats npcStats constructor changing player values
                 self.runspeedFac *= (.8f / .84f); 
                 self.bodyWeightFac *= (.65f / .63375f);
                 self.poleClimbSpeedFac *= (.8f / .836f); 
                 self.corridorClimbSpeedFac *= (.8f / .84f);
+                break;
         }
     }
     

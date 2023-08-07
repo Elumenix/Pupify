@@ -68,13 +68,7 @@ public static class MultiPlayer
         }
         else
         {
-            // Sandbox/Challenge pathway
-            if (!Session.game.IsStorySession)
-            {
-                startingIncrement++;
-            }
-            
-            // Also Single Player story mode
+            // Single Player story mode
             return Plugin.currentSlugcat;
         }
     }
@@ -132,7 +126,7 @@ public static class MultiPlayer
         var loopStart = c.Body.Instructions.First(instr => instr.Offset == 0x125);
             
         // Find the third to last assignment in the method : hard coded because it's definitive
-        if (c.TryGotoNext(MoveType.After,
+        if (c.TryGotoNext(MoveType.Before,
                 instr => instr.MatchLdarg(0),
                 instr => instr.MatchLdfld<StoryGameSession>("characterStatsJollyplayer"),
                 instr => instr.MatchLdloc(0),
