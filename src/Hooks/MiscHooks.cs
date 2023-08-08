@@ -6,6 +6,7 @@ using RWCustom;
 using UnityEngine;
 using MenuLabel = Menu.MenuLabel;
 using MenuObject = Menu.MenuObject;
+using ModdingMenu = On.Menu.ModdingMenu;
 using MoreSlugcatsEnums = MoreSlugcats.MoreSlugcatsEnums;
 using SlugcatSelectMenu = On.Menu.SlugcatSelectMenu;
 
@@ -15,8 +16,19 @@ public static class MiscHooks
 {
     public static void Init()
     {
+        ModdingMenu.Singal += ModdingMenu_Singal;
         On.ProcessManager.PostSwitchMainProcess += ProcessManager_PostSwitchMainProcess;
         SlugcatSelectMenu.SlugcatPageContinue.ctor += SlugcatPageContinue_ctor;
+    }
+
+    
+    // Yes, the word signal is spelled incorrectly in the internal code
+    private static void ModdingMenu_Singal(ModdingMenu.orig_Singal orig, Menu.ModdingMenu self, MenuObject sender, string message)
+    {
+        // Because my options menu uses FSprites and I don't have access to the modding menu from that class,
+        // I need a way to turn them off after leaving or switching between remix menus, otherwise they stay on screen
+        orig(self, sender, message);
+        Options.TurnOffFoodBar();
     }
 
 

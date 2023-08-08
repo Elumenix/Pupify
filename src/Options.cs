@@ -1,7 +1,9 @@
 ﻿using BepInEx.Logging;
+using HUD;
 using Menu.Remix.MixedUI;
 using Menu.Remix.MixedUI.ValueTypes;
 using UnityEngine;
+using HUD = HUD.HUD;
 
 namespace Pupify;
 
@@ -46,10 +48,44 @@ public class Options : OptionInterface
     private UIelement[] UIArrPlayerModify;
     private OpRadioButtonGroup foodGroup;
     private OpRadioButtonGroup statGroup;
+    private static FContainer foodBar = new FContainer();
+    private FSprite[] circleSprites;
+    private FSprite[] pipSprites;
+    private FSprite staff;
 
 
     public override void Initialize()
     {
+        // Create the parts for the foodBar graphic to appear on screen
+        Futile.stage.AddChild(foodBar);
+
+        circleSprites = new FSprite[20];
+        pipSprites = new FSprite[20];
+        staff = new FSprite("pixel")
+        {
+            scaleX = 2f,
+            scaleY = 34.5f,
+            y = 230f
+        };
+
+        for (int i = 0; i < 20; i++)
+        {
+            pipSprites[i] = new FSprite(Futile.atlasManager.GetElementWithName("FoodCircleB"))
+            {
+                y = 230f
+            };
+
+            circleSprites[i] = new FSprite(Futile.atlasManager.GetElementWithName("FoodCircleA"))
+            {
+                y = 230f
+            };
+
+            foodBar.AddChild(pipSprites[i]);
+            foodBar.AddChild(circleSprites[i]);
+        }
+        foodBar.AddChild(staff);
+
+        // Instantiate all other major parts
         var opTab = new OpTab(this, "Options");
         var modifyTab = new OpTab(this, "Modify");
         Tabs = new[]
@@ -219,6 +255,55 @@ public class Options : OptionInterface
 
     public override void Update()
     {
+        // This first part handles showing the food bar that appears at the bottom of the menu
+        int totalPips = (int) Mathf.Round(((OpUpdown) UIArrPlayerOptions[24]).valueFloat);
+        int cutoff = (int) Mathf.Round(((OpUpdown) UIArrPlayerOptions[23]).valueFloat);
+        if (!UIArrPlayerOptions[0].IsInactive && UIArrPlayerOptions[UIArrPlayerOptions.Length - 1].IsInactive)
+        {
+            foodBar.isVisible = true;
+            staff.x = 555 + 30 * cutoff + 300 - 15 * totalPips;
+            
+            for (int i = 0; i < 20; i++)
+            {
+                if (i >= totalPips)
+                {
+                    circleSprites[i].isVisible = false;
+                    pipSprites[i].isVisible = false;
+                }
+                else
+                {
+                    circleSprites[i].isVisible = true;
+                    
+                    circleSprites[i].x = 570 + 30 * i + 300 - 15 * totalPips;
+
+                    // There should be some extra space on either side of the staff
+                    if (i < cutoff)
+                    {
+                        circleSprites[i].x -= 8;
+                    }
+                    else
+                    {
+                        circleSprites[i].x += 8;
+                    }
+
+                    if (i < cutoff)
+                    {
+                        pipSprites[i].isVisible = true;
+                        pipSprites[i].x = 570 + 30 * i + 300 - 15 * totalPips - 8;
+                    }
+                    else
+                    {
+                        pipSprites[i].isVisible = false;
+                    }
+                }
+            }
+        }
+        else
+        {
+            foodBar.isVisible = false;
+        }
+
+
         // I think this prevents crashing due to typing, not completely sure on that though
         ((OpUpdown) UIArrPlayerOptions[23]).InScrollBox = false;
         ((OpUpdown) UIArrPlayerOptions[24]).InScrollBox = false;
@@ -240,6 +325,7 @@ public class Options : OptionInterface
         }
         
         
+        // Second part handles display if cosmetic only mode is checked
 	    if (((OpCheckBox)UIArrPlayerOptions[2]).GetValueBool())
         {
             for (int i = 3; i < UIArrPlayerOptions.Length; i++)
@@ -261,6 +347,7 @@ public class Options : OptionInterface
             UIArrPlayerOptions[UIArrPlayerOptions.Length - 1].Hide(); 
         }
 
+        // Third part grays out the food options if they are set to be overridden  
         for (int i = 3; i <= 11; i++)
         {
             if (((OpCheckBox)UIArrPlayerOptions[22]).GetValueBool())
@@ -277,6 +364,19 @@ public class Options : OptionInterface
                     iFocusable.greyedOut = false;
                 }
             }
+        }
+    }
+
+    public static void TurnOffFoodBar()
+    {
+        if (foodBar is {isVisible: true})
+        {
+            foodBar.isVisible = false;
+
+            // Get rid of all textures so the foodBar doesn't mess up if the remix menu is reopened
+            Futile.atlasManager.UnloadAtlas("pixel");
+            Futile.atlasManager.UnloadAtlas("FoodCircleA");
+            Futile.atlasManager.UnloadAtlas("FoodCircleB");
         }
     }
 }
