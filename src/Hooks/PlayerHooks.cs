@@ -382,45 +382,51 @@ public static class PlayerHooks
         
         if (focus == self)
         {
-            switch (Plugin.options.foodOption.Value)
+            // Set currentSlugcat if not already set
+            Plugin.currentSlugcat ??= self;
+            
+            if (Plugin.options.overrideFood.Value && self == Plugin.currentSlugcat) // Override Option
             {
-                // Calculated
-                case 0:
+                // This luckily is all that's needed for this option due to my multiplayer implementation
+                self.foodToHibernate = Mathf.RoundToInt(Plugin.options.foodToHibernate.Value);
+                self.maxFood = Mathf.RoundToInt(Plugin.options.maxFood.Value);
+            }
+            else // Food Option
+            {
+                switch (Plugin.options.foodOption.Value)
                 {
-                    if (Plugin.currentSlugcat == null)
+                    // Calculated
+                    case 0:
                     {
-                        Plugin.currentSlugcat = self;
-                        focus = self;
+                        // Malnourishment has already been accounted for at this point
+                        float percentRequired = (float) self.foodToHibernate / self.maxFood;
+                        self.maxFood = Mathf.RoundToInt(self.maxFood * (3f / 7f));
+                        self.foodToHibernate =
+                            Mathf.RoundToInt(self.maxFood * percentRequired * (7f / 6f));
+
+
+                        // This may happen with a custom slugcat with ludicrously high food values
+                        if (self.foodToHibernate > self.maxFood)
+                        {
+                            self.foodToHibernate = self.maxFood;
+                        }
+
+                        break;
                     }
-                    
-                    // Malnourishment has already been accounted for at this point
-                    float percentRequired = (float) self.foodToHibernate / self.maxFood;
-                    self.maxFood = Mathf.RoundToInt(self.maxFood * (3f / 7f));
-                    self.foodToHibernate =
-                        Mathf.RoundToInt(self.maxFood * percentRequired * (7f / 6f));
 
+                    // Pup
+                    // This doesn't use previous values, so malnourished needs to be hard-coded
+                    case 2 when malnourished:
+                        self.foodToHibernate = 3;
+                        self.maxFood = 3;
+                        break;
+                    case 2:
+                        self.foodToHibernate = 2;
+                        self.maxFood = 3;
+                        break;
 
-                    // This may happen with a custom slugcat with ludicrously high food values
-                    if (self.foodToHibernate > self.maxFood)
-                    {
-                        self.foodToHibernate = self.maxFood;
-                    }
-
-                    break;
+                    // default: don't override the value : Original
                 }
-                
-                // Pup
-                // This doesn't use previous values, so malnourished needs to be hard-coded
-                case 2 when malnourished:
-                    self.foodToHibernate = 3;
-                    self.maxFood = 3;
-                    break;
-                case 2:
-                    self.foodToHibernate = 2;
-                    self.maxFood = 3;
-                    break;
-                
-                // default: don't override the value : Original
             }
         }
         else

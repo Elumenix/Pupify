@@ -128,71 +128,89 @@ public static class MiscHooks
                 new IntVector2(self.saveGameData.karma, self.saveGameData.karmaCap),
                 self.saveGameData.karmaReinforced));
 
-            // The strategy here is to just completely redo the calculation each time because it's inexpensive
-            // and also prevents me from needing to deal with several edge cases related to changing save files
-            // whenever the food option on the mod is changed
-            if (Plugin.options.foodOption.Value == 0) // Calculated values
+            if (Plugin.options.overrideFood.Value)
             {
-                float percentRequired = (float) SlugcatStats.SlugcatFoodMeter(slugcatNumber).y /
-                                        SlugcatStats.SlugcatFoodMeter(slugcatNumber).x;
-                int maxFood = Mathf.RoundToInt(SlugcatStats.SlugcatFoodMeter(slugcatNumber).x * (3f / 7f));
-                int foodToHibernate = Mathf.RoundToInt(maxFood * percentRequired * (7f / 6f));
-            
-                // This may happen with a custom slugcat with ludicrously high food values
-                if (foodToHibernate > maxFood)
-                {
-                    foodToHibernate = maxFood;
-                }
-                
-                // Hopefully this prevents circles from filling in past the bar
-                self.saveGameData.food =
-                    Custom.IntClamp(self.saveGameData.food, 0, maxFood - foodToHibernate);
-                
                 // Specific edge case that result from artificer being allowed a cycle 0 save
-                if (slugcatNumber == MoreSlugcatsEnums.SlugcatStatsName.Artificer && Plugin.options.letEatMeat.Value &&
+                if (slugcatNumber == MoreSlugcatsEnums.SlugcatStatsName.Artificer &&
+                    Plugin.options.letEatMeat.Value &&
                     self.saveGameData.cycle == 0)
                 {
                     self.saveGameData.food = 4;
                 }
-                
-                self.hud.AddPart(new FoodMeter(self.hud, maxFood, foodToHibernate));
-            }
-            else if (Plugin.options.foodOption.Value == 1) // orig values
-            {
-                // original method Default food stats
 
-                self.saveGameData.food = Custom.IntClamp(self.saveGameData.food, 0,
-                    SlugcatStats.SlugcatFoodMeter(slugcatNumber).y);
-                
-                // Specific edge case that result from artificer being allowed a cycle 0 save
-                if (slugcatNumber == MoreSlugcatsEnums.SlugcatStatsName.Artificer && Plugin.options.letEatMeat.Value &&
-                    self.saveGameData.cycle == 0)
-                {
-                    self.saveGameData.food = 4;
-                }
-                
-                
-                self.hud.AddPart(new FoodMeter(self.hud, SlugcatStats.SlugcatFoodMeter(slugcatNumber).x,
-                    SlugcatStats.SlugcatFoodMeter(slugcatNumber).y));
+                self.hud.AddPart(new FoodMeter(self.hud, Mathf.RoundToInt(Plugin.options.maxFood.Value),
+                    Mathf.RoundToInt(Plugin.options.foodToHibernate.Value)));
             }
-            else // Pup values
+            else
             {
-                // Third thing where locked to pup
-                self.saveGameData.food = Custom.IntClamp(self.saveGameData.food, 0,
-                    1);
-                
-                // Specific edge case that result from artificer being allowed a cycle 0 save
-                if (slugcatNumber == MoreSlugcatsEnums.SlugcatStatsName.Artificer && Plugin.options.letEatMeat.Value &&
-                    self.saveGameData.cycle == 0)
+                // The strategy here is to just completely redo the calculation each time because it's inexpensive
+                // and also prevents me from needing to deal with several edge cases related to changing save files
+                // whenever the food option on the mod is changed
+                if (Plugin.options.foodOption.Value == 0) // Calculated values
                 {
-                    self.saveGameData.food = 3;
+                    float percentRequired = (float) SlugcatStats.SlugcatFoodMeter(slugcatNumber).y /
+                                            SlugcatStats.SlugcatFoodMeter(slugcatNumber).x;
+                    int maxFood = Mathf.RoundToInt(SlugcatStats.SlugcatFoodMeter(slugcatNumber).x * (3f / 7f));
+                    int foodToHibernate = Mathf.RoundToInt(maxFood * percentRequired * (7f / 6f));
+
+                    // This may happen with a custom slugcat with ludicrously high food values
+                    if (foodToHibernate > maxFood)
+                    {
+                        foodToHibernate = maxFood;
+                    }
+
+                    // Hopefully this prevents circles from filling in past the bar
+                    self.saveGameData.food =
+                        Custom.IntClamp(self.saveGameData.food, 0, maxFood - foodToHibernate);
+
+                    // Specific edge case that result from artificer being allowed a cycle 0 save
+                    if (slugcatNumber == MoreSlugcatsEnums.SlugcatStatsName.Artificer &&
+                        Plugin.options.letEatMeat.Value &&
+                        self.saveGameData.cycle == 0)
+                    {
+                        self.saveGameData.food = 4;
+                    }
+
+                    self.hud.AddPart(new FoodMeter(self.hud, maxFood, foodToHibernate));
                 }
-                
-                self.hud.AddPart(new FoodMeter(self.hud, 3,
-                    2));
+                else if (Plugin.options.foodOption.Value == 1) // orig values
+                {
+                    // original method Default food stats
+
+                    self.saveGameData.food = Custom.IntClamp(self.saveGameData.food, 0,
+                        SlugcatStats.SlugcatFoodMeter(slugcatNumber).y);
+
+                    // Specific edge case that result from artificer being allowed a cycle 0 save
+                    if (slugcatNumber == MoreSlugcatsEnums.SlugcatStatsName.Artificer &&
+                        Plugin.options.letEatMeat.Value &&
+                        self.saveGameData.cycle == 0)
+                    {
+                        self.saveGameData.food = 4;
+                    }
+
+
+                    self.hud.AddPart(new FoodMeter(self.hud, SlugcatStats.SlugcatFoodMeter(slugcatNumber).x,
+                        SlugcatStats.SlugcatFoodMeter(slugcatNumber).y));
+                }
+                else // Pup values
+                {
+                    // Third thing where locked to pup
+                    self.saveGameData.food = Custom.IntClamp(self.saveGameData.food, 0,
+                        1);
+
+                    // Specific edge case that result from artificer being allowed a cycle 0 save
+                    if (slugcatNumber == MoreSlugcatsEnums.SlugcatStatsName.Artificer &&
+                        Plugin.options.letEatMeat.Value &&
+                        self.saveGameData.cycle == 0)
+                    {
+                        self.saveGameData.food = 3;
+                    }
+
+                    self.hud.AddPart(new FoodMeter(self.hud, 3,
+                        2));
+                }
             }
-            
-            
+
 
             string text = "";
             if (self.saveGameData.shelterName is {Length: > 2})

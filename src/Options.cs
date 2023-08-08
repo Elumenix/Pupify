@@ -1,9 +1,7 @@
 ﻿using BepInEx.Logging;
-using HUD;
 using Menu.Remix.MixedUI;
 using Menu.Remix.MixedUI.ValueTypes;
 using UnityEngine;
-using HUD = HUD.HUD;
 
 namespace Pupify;
 
@@ -48,7 +46,7 @@ public class Options : OptionInterface
     private UIelement[] UIArrPlayerModify;
     private OpRadioButtonGroup foodGroup;
     private OpRadioButtonGroup statGroup;
-    private static FContainer foodBar = new FContainer();
+    private static readonly FContainer foodBar = new FContainer();
     private FSprite[] circleSprites;
     private FSprite[] pipSprites;
     private FSprite staff;

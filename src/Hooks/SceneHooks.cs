@@ -32,44 +32,56 @@ public static class SceneHooks
         orig(self);
 
         if (Plugin.options.onlyCosmetic.Value) return;
-        
-        if (self.room.game.Players[0].realizedCreature is Player {playerState: not null} player)
+
+        if (self.room.game.Players[0].realizedCreature is not Player {playerState: not null} player) return;
+        if (Plugin.options.overrideFood.Value) // Food Override
         {
-            player.playerState.foodInStomach = Plugin.options.foodOption.Value switch
-            {
-                // Hunter is designed to start 1 food short of being able to hibernate first cycle
-                0 => 2,
-                1 => 5,
-                2 => 1,
-                _ => 0
-            };
+	        player.playerState.foodInStomach = Mathf.RoundToInt(Plugin.options.maxFood.Value) - 1;
+        }
+        else // Food Option
+        {
+	        player.playerState.foodInStomach = Plugin.options.foodOption.Value switch
+	        {
+		        // Hunter is designed to start 1 food short of being able to hibernate first cycle
+		        0 => 2,
+		        1 => 5,
+		        2 => 1,
+		        _ => 0
+	        };
         }
     }
-    
-    
-    private static void SpearmasterGateLocation_Update(MSCRoomSpecificScript.SpearmasterGateLocation.orig_Update orig, MoreSlugcats.MSCRoomSpecificScript.SpearmasterGateLocation self, bool eu)
+
+
+    private static void SpearmasterGateLocation_Update(MSCRoomSpecificScript.SpearmasterGateLocation.orig_Update orig,
+	    MoreSlugcats.MSCRoomSpecificScript.SpearmasterGateLocation self, bool eu)
     {
         orig(self, eu);
 
         if (Plugin.options.onlyCosmetic.Value) return;
+        if (self.room.game.Players[0].realizedCreature is not Player {playerState: not null} player) return;
         
         // Makes sure that spearmaster doesn't spawn with more food than a pup should have
         // which would cause an out of range error upon the first time eating, strictly on cycle 0
-        if (self.room.game.Players[0].realizedCreature is Player {playerState: not null} player)
+        if (Plugin.options.overrideFood.Value) // Food Override
         {
-            player.playerState.foodInStomach = Plugin.options.foodOption.Value switch
-            {
-                // Spearmaster is designed to start 1 food short of being able to hibernate first cycle
-                0 => 1,
-                1 => 4,
-                2 => 1,
-                _ => 0
-            };
+	        player.playerState.foodInStomach = Mathf.RoundToInt(Plugin.options.maxFood.Value) - 1;
+        }
+        else // Food Option
+        {
+	        player.playerState.foodInStomach = Plugin.options.foodOption.Value switch
+	        {
+		        // Spearmaster is designed to start 1 food short of being able to hibernate first cycle
+		        0 => 1,
+		        1 => 4,
+		        2 => 1,
+		        _ => 0
+	        };
         }
     }
-    
-    
-    private static void CutsceneArtificer_Update(CutsceneArtificer.orig_Update orig, MoreSlugcats.CutsceneArtificer self, bool eu)
+
+
+    private static void CutsceneArtificer_Update(CutsceneArtificer.orig_Update orig,
+	    MoreSlugcats.CutsceneArtificer self, bool eu)
     {
         orig(self, eu);
 
@@ -83,8 +95,24 @@ public static class SceneHooks
             // The cutscene needs to handle this part if this is the opening; This check makes sure this isn't the cutscene
             if (!(self.player.myRobot == null || self.player.myRobot != null && self.room.world.rainCycle.timer >= 400))
             {
-                // Don't make pup meter go past 4 though
-                self.player.playerState.foodInStomach = Plugin.options.foodOption.Value != 2 ? 4 : 3;
+	            if (Plugin.options.overrideFood.Value) // Food Override
+	            {
+		            int inStomach = 4; // initial value from eating the scavenger
+		            int largestPossible = Mathf.RoundToInt(Plugin.options.maxFood.Value) -
+		                                  Mathf.RoundToInt(Plugin.options.foodToHibernate.Value);
+
+		            if (inStomach > largestPossible)
+		            {
+			            inStomach = largestPossible;
+		            }
+
+		            self.player.playerState.foodInStomach = inStomach;
+	            }
+	            else // Food Option
+	            {
+		            // Don't make pup meter go past 4 though
+		            self.player.playerState.foodInStomach = Plugin.options.foodOption.Value != 2 ? 4 : 3;
+	            }
             }
         }
         else
@@ -96,14 +124,20 @@ public static class SceneHooks
     
     // This was originally meant to be an IL hook but I couldn't find a possible way to delete the line
     // The entire point of this method is simply so that artificer doesn't place a pup on her back because it crashes the game
-    private static void ArtificerDream_1_SceneSetup(MSCRoomSpecificScript.ArtificerDream_1.orig_SceneSetup orig, MoreSlugcats.MSCRoomSpecificScript.ArtificerDream_1 self)
+    private static void ArtificerDream_1_SceneSetup(MSCRoomSpecificScript.ArtificerDream_1.orig_SceneSetup orig,
+	    MoreSlugcats.MSCRoomSpecificScript.ArtificerDream_1 self)
     {
         if (self.artificerPuppet == null)
-		{
-			self.artificerPuppet = new AbstractCreature(self.room.world, StaticWorld.GetCreatureTemplate(CreatureTemplate.Type.Slugcat), null, new WorldCoordinate(self.room.abstractRoom.index, 87, 8, -1), self.room.game.GetNewID());
-			self.artificerPuppet.state = new PlayerState(self.artificerPuppet, 0, MoreSlugcatsEnums.SlugcatStatsName.Artificer, true);
+        {
+	        self.artificerPuppet = new AbstractCreature(self.room.world,
+		        StaticWorld.GetCreatureTemplate(CreatureTemplate.Type.Slugcat), null,
+		        new WorldCoordinate(self.room.abstractRoom.index, 87, 8, -1), self.room.game.GetNewID());
+	        self.artificerPuppet.state = new PlayerState(self.artificerPuppet, 0,
+		        MoreSlugcatsEnums.SlugcatStatsName.Artificer, true);
 			self.room.abstractRoom.AddEntity(self.artificerPuppet);
-			self.pup2Puppet = new AbstractCreature(self.room.world, StaticWorld.GetCreatureTemplate(MoreSlugcatsEnums.CreatureTemplateType.SlugNPC), null, new WorldCoordinate(self.room.abstractRoom.index, 87, 8, -1), self.room.game.GetNewID());
+			self.pup2Puppet = new AbstractCreature(self.room.world,
+				StaticWorld.GetCreatureTemplate(MoreSlugcatsEnums.CreatureTemplateType.SlugNPC), null,
+				new WorldCoordinate(self.room.abstractRoom.index, 87, 8, -1), self.room.game.GetNewID());
 			self.pup2Puppet.ID.setAltSeed(1001);
 			self.pup2Puppet.state = new PlayerNPCState(self.pup2Puppet, 0);
 			self.room.abstractRoom.AddEntity(self.pup2Puppet);
@@ -135,9 +169,11 @@ public static class SceneHooks
         }
         self.sceneStarted = true;
     }
-    
-    
-    private static Player.InputPackage ArtificerDream_1_GetInput(MSCRoomSpecificScript.ArtificerDream_1.orig_GetInput orig, MoreSlugcats.MSCRoomSpecificScript.ArtificerDream_1 self, int index)
+
+
+    private static Player.InputPackage ArtificerDream_1_GetInput(
+	    MSCRoomSpecificScript.ArtificerDream_1.orig_GetInput orig,
+	    MoreSlugcats.MSCRoomSpecificScript.ArtificerDream_1 self, int index)
     {
         AbstractCreature firstAlivePlayer = self.room.game.FirstAlivePlayer;
 
@@ -158,7 +194,8 @@ public static class SceneHooks
 			self.artyPlayerPuppet.bodyChunks[1].vel *= 0f;
 			self.artyPlayerPuppet.bodyChunks[0].pos = new Vector2(1900f, 340f);
 			self.artyPlayerPuppet.bodyChunks[1].pos = new Vector2(1900f, 320f);
-			return new Player.InputPackage(false, global::Options.ControlSetup.Preset.None, 1, 1, false, false, true, false, false);
+			return new Player.InputPackage(false, global::Options.ControlSetup.Preset.None, 1, 1, false, false, true,
+				false, false);
 		}
 		if (self.sceneTimer == 165)
 		{
