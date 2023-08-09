@@ -57,7 +57,7 @@ public class Plugin : BaseUnityPlugin
             MultiPlayer.Init();
             
             // Test code
-            On.Player.Update += Player_Update;
+            //On.Player.Update += Player_Update;
 
             MachineConnector.SetRegisteredOI("elumenix.pupify", options);
             IsInit = true;
@@ -70,7 +70,7 @@ public class Plugin : BaseUnityPlugin
     }
 
     
-    private void Player_Update(On.Player.orig_Update orig, Player self, bool eu)
+    /*private void Player_Update(On.Player.orig_Update orig, Player self, bool eu)
     {
         orig(self, eu);
 
@@ -83,7 +83,7 @@ public class Plugin : BaseUnityPlugin
         Debug.Log(self.abstractCreature.ID + " ThrowingSkill: " + self.slugcatStats.throwingSkill);
         Debug.Log(self.abstractCreature.ID + " PoleClimbSpeed: " + self.slugcatStats.poleClimbSpeedFac);
         Debug.Log(self.abstractCreature.ID + " CorridorClimbSpeed: " + self.slugcatStats.corridorClimbSpeedFac);
-    }
+    }*/
     
     
     private void RainWorldGame_ShutDownProcess(On.RainWorldGame.orig_ShutDownProcess orig, RainWorldGame self)
