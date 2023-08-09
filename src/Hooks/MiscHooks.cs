@@ -50,6 +50,8 @@ public static class MiscHooks
             MultiPlayer.onlyPupsLeft = false;
             MultiPlayer.startingIncrement = 0;
             MultiPlayer.currentIndex = 0;
+            MultiPlayer.numAccessed = 0;
+            MultiPlayer.playerToLoad = 0;
             MultiPlayer.ClearPlayers();
         }
 

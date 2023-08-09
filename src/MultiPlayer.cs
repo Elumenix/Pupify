@@ -13,6 +13,7 @@ public static class MultiPlayer
     public static int currentIndex;
     public static int playerToLoad;
     public static bool onlyPupsLeft;
+    public static int numAccessed;
     
 
     public static void Init()
@@ -82,6 +83,7 @@ public static class MultiPlayer
 
     public static SlugcatStats GetSpecificPlayer(int index)
     {
+        numAccessed++;
         return playerStats[index];
     }
 

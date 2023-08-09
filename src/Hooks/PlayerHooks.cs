@@ -351,19 +351,19 @@ public static class PlayerHooks
         if (MultiPlayer.startingIncrement >= 2 || MultiPlayer.Session != null &&
             MultiPlayer.Session is not StoryGameSession && MultiPlayer.startingIncrement >= 1)
         {
-            MultiPlayer.AddPlayer(self);    
+            MultiPlayer.AddPlayer(self);
         }
 
         SlugcatStats focus;
 
         // Players are created in a random order in multiplayer so stats are assigned accordingly
-        if (MultiPlayer.Session is ArenaGameSession && Plugin.playersCreated)
+        if (MultiPlayer.Session is ArenaGameSession && Plugin.playersCreated && MultiPlayer.startingIncrement != 4)
         {
             focus = MultiPlayer.GetSpecificPlayer(MultiPlayer.playerToLoad);
         }
-        else if (ModManager.CoopAvailable)
+        else if (ModManager.CoopAvailable || MultiPlayer.Session is ArenaGameSession || MultiPlayer.Session is SandboxGameSession)
         {
-            if (MultiPlayer.onlyPupsLeft)
+            if (MultiPlayer.onlyPupsLeft || MultiPlayer.startingIncrement == 4)
             {
                 focus = self;
             }
@@ -385,16 +385,18 @@ public static class PlayerHooks
         // playerCreated is checked solely in case a slugpup spawns, It prevents the slugpup from copying the player stats
         if (Plugin.options.onlyCosmetic.Value ||
             (Plugin.playersCreated && !ModManager.CoopAvailable && MultiPlayer.Session is not ArenaGameSession) ||
-            MultiPlayer.onlyPupsLeft && MultiPlayer.startingIncrement == 4) return;
+            MultiPlayer.startingIncrement == 4) return;
 
         // This is the last slugcat to determine, make sure the above if block is never true
-        if (MultiPlayer.onlyPupsLeft)
+        // NumAccessed has essentially the same function as onlyPupsLeft but for arena mode instead of story
+        if (MultiPlayer.onlyPupsLeft || MultiPlayer.Session is ArenaGameSession {arenaSitting: not null} arena && 
+            arena.arenaSitting.players.Count != 0 && MultiPlayer.numAccessed == arena.arenaSitting.players.Count * 2)
         {
             MultiPlayer.startingIncrement = 4;
         }
         
         // After this character, the game can spawn slugpups normally
-        if (!ModManager.CoopAvailable && Plugin.currentSlugcat != null)
+        if (!ModManager.CoopAvailable && MultiPlayer.Session is not ArenaGameSession && MultiPlayer.Session is not SandboxGameSession && Plugin.currentSlugcat != null)
         {
             Plugin.playersCreated = true;
         }
