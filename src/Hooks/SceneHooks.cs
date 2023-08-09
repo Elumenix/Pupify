@@ -13,6 +13,7 @@ public static class SceneHooks
     {
         // Game start scenes. Food is altered autonomously 
         On.HardmodeStart.SinglePlayerUpdate += HardmodeStart_SinglePlayerUpdate;
+        On.HardmodeStart.HardmodePlayer.Update += HardmodePlayer_Update;
         MSCRoomSpecificScript.SpearmasterGateLocation.Update += SpearmasterGateLocation_Update;
         CutsceneArtificer.Update += CutsceneArtificer_Update;
 
@@ -24,8 +25,8 @@ public static class SceneHooks
         MSCRoomSpecificScript.ArtificerDream_4.GetInput += ArtificerDream_4_GetInput;
         MSCRoomSpecificScript.ArtificerDream_5.SceneSetup += ArtificerDream_5_SceneSetup;
     }
-    
-    
+
+
     private static void HardmodeStart_SinglePlayerUpdate(On.HardmodeStart.orig_SinglePlayerUpdate orig, HardmodeStart self)
     {
         // Hunter's intro, which attempts to fill his food meter past the bar on cycle 0
@@ -36,7 +37,7 @@ public static class SceneHooks
         if (self.room.game.Players[0].realizedCreature is not Player {playerState: not null} player) return;
         if (Plugin.options.overrideFood.Value) // Food Override
         {
-	        player.playerState.foodInStomach = Mathf.RoundToInt(Plugin.options.maxFood.Value) - 1;
+	        player.playerState.foodInStomach = Mathf.RoundToInt(Plugin.options.foodToHibernate.Value) - 1;
         }
         else // Food Option
         {
@@ -49,6 +50,45 @@ public static class SceneHooks
 		        _ => 0
 	        };
         }
+    }
+    
+    
+    // This is the Jolly Coop version of this method : It barely changes
+    private static void HardmodePlayer_Update(On.HardmodeStart.HardmodePlayer.orig_Update orig, HardmodeStart.HardmodePlayer self)
+    {
+	    // Method Attempts to change runSpeed for first cycle for some reason, I'm preventing this
+	    float runSpeed = 1.2f;
+	    if (self.Player != null)
+	    {
+		    runSpeed = self.Player.slugcatStats.runspeedFac;
+	    }
+        
+	    orig(self);
+
+	    if (self.Player != null)
+	    {
+		    self.Player.slugcatStats.runspeedFac = runSpeed;
+	    }
+        
+
+	    if (Plugin.options.onlyCosmetic.Value) return;
+        
+	    if (self.Player?.room.game.Players[0].realizedCreature is not Player {playerState: not null} player) return;
+	    if (Plugin.options.overrideFood.Value) // Food Override
+	    {
+		    player.playerState.foodInStomach = Mathf.RoundToInt(Plugin.options.foodToHibernate.Value) - 1;
+	    }
+	    else // Food Option
+	    {
+		    player.playerState.foodInStomach = Plugin.options.foodOption.Value switch
+		    {
+			    // Hunter is designed to start 1 food short of being able to hibernate first cycle
+			    0 => 2,
+			    1 => 5,
+			    2 => 1,
+			    _ => 0
+		    };
+	    }
     }
 
 
@@ -64,7 +104,7 @@ public static class SceneHooks
         // which would cause an out of range error upon the first time eating, strictly on cycle 0
         if (Plugin.options.overrideFood.Value) // Food Override
         {
-	        player.playerState.foodInStomach = Mathf.RoundToInt(Plugin.options.maxFood.Value) - 1;
+	        player.playerState.foodInStomach = Mathf.RoundToInt(Plugin.options.foodToHibernate.Value) - 1;
         }
         else // Food Option
         {

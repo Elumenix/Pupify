@@ -27,6 +27,7 @@ public static class PlayerHooks
         // Stats
         On.Player.GetInitialSlugcatClass += Player_GetInitialSlugcatClass;
         On.SlugcatStats.ctor += SlugcatStats_ctor;
+        On.Player.SetMalnourished += Player_SetMalnourished;
         On.ShelterDoor.DoorClosed += ShelterDoor_DoorClosed;
         
         // Appearance
@@ -360,9 +361,21 @@ public static class PlayerHooks
         {
             focus = MultiPlayer.GetSpecificPlayer(MultiPlayer.playerToLoad);
         }
+        else if (ModManager.CoopAvailable)
+        {
+            if (MultiPlayer.onlyPupsLeft)
+            {
+                focus = self;
+            }
+            else
+            {
+                focus = MultiPlayer.GetCurrentPlayer() ?? self;
+            }
+        }
         else
         {
-            focus = MultiPlayer.GetCurrentPlayer() ?? self;
+            // This is so that natural slugpups don't start with players stats instead of their own
+            focus = Plugin.playersCreated ? self : Plugin.currentSlugcat ?? self;
         }
         
         // Calling the original just corrects body color changes, all important stats get overwritten after
@@ -370,10 +383,23 @@ public static class PlayerHooks
 
 
         // playerCreated is checked solely in case a slugpup spawns, It prevents the slugpup from copying the player stats
-        if (Plugin.options.onlyCosmetic.Value || (Plugin.playersCreated && !ModManager.CoopAvailable &&
-                                                  MultiPlayer.Session is not ArenaGameSession)) return;
+        if (Plugin.options.onlyCosmetic.Value ||
+            (Plugin.playersCreated && !ModManager.CoopAvailable && MultiPlayer.Session is not ArenaGameSession) ||
+            MultiPlayer.onlyPupsLeft && MultiPlayer.startingIncrement == 4) return;
+
+        // This is the last slugcat to determine, make sure the above if block is never true
+        if (MultiPlayer.onlyPupsLeft)
+        {
+            MultiPlayer.startingIncrement = 4;
+        }
         
-        // This block will run twice, once following the initial creation of the campaign character
+        // After this character, the game can spawn slugpups normally
+        if (!ModManager.CoopAvailable && Plugin.currentSlugcat != null)
+        {
+            Plugin.playersCreated = true;
+        }
+        
+        // This block will run twice (in single-player), once following the initial creation of the campaign character
         // The second after the creation of the pup. The player actually plays as the pup
         // I store a reference to the first character, who will be instantiated with the correct stats the first time through
         // When the NPCStats method runs, after the program realizes I set the player to be treated as a pup, the 
@@ -383,7 +409,11 @@ public static class PlayerHooks
         if (focus == self)
         {
             // Set currentSlugcat if not already set
-            Plugin.currentSlugcat ??= self;
+            // ReSharper disable once ConvertIfStatementToNullCoalescingAssignment
+            if (Plugin.currentSlugcat == null)
+            {
+                Plugin.currentSlugcat = self;
+            }
             
             if (Plugin.options.overrideFood.Value && self == Plugin.currentSlugcat) // Override Option
             {
@@ -439,6 +469,13 @@ public static class PlayerHooks
             }
             else
             {
+                // This line shouldn't ever have a reason to execute, but there was a compiler warning so this is for safety
+                // ReSharper disable once ConvertIfStatementToNullCoalescingAssignment
+                if (Plugin.currentSlugcat == null)
+                {
+                    Plugin.currentSlugcat = self;
+                }
+                
                 // For jolly coop, different foodBar values mean that all players have different
                 // values for starvation, and some might not even be able to reach their min value
                 // if player one has a smaller min value than them. Standardizing it to the campaign
@@ -461,7 +498,7 @@ public static class PlayerHooks
                     focus = self;
                 }
             
-                if (focus == self || !Plugin.playersCreated && ModManager.JollyCoop && ModManager.CoopAvailable)
+                if (focus == self || !Plugin.playersCreated && ModManager.CoopAvailable)
                 {
                     // Stat adjustments
                     self.runspeedFac = focus.runspeedFac * .8f * (.8f / .84f); // NPCStats interferes
@@ -531,6 +568,28 @@ public static class PlayerHooks
                 self.poleClimbSpeedFac *= (.8f / .836f); 
                 self.corridorClimbSpeedFac *= (.8f / .84f);
                 break;
+        }
+    }
+    
+    
+    private static void Player_SetMalnourished(On.Player.orig_SetMalnourished orig, Player self, bool m)
+    {
+        // fixes a glitch in jolly coop where slugpups randomly have their weight set down when not starving
+        if (self.npcCharacterStats != null && !m && self.isSlugpup)
+        {
+            float correctBodyWeight = self.npcCharacterStats.bodyWeightFac;
+
+            orig(self, false);
+            self.npcCharacterStats.bodyWeightFac = correctBodyWeight;
+            self.slugcatStats.bodyWeightFac = correctBodyWeight;
+
+            float num = 0.7f * self.slugcatStats.bodyWeightFac;
+            self.bodyChunks[0].mass = num / 2f;
+            self.bodyChunks[1].mass = num / 2f;
+        }
+        else
+        {
+            orig(self, m);
         }
     }
     

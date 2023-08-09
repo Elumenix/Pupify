@@ -47,6 +47,7 @@ public static class MiscHooks
             Plugin.currentSlugcat = null;
             Plugin.playersCreated = false;
             MultiPlayer.Session = null;
+            MultiPlayer.onlyPupsLeft = false;
             MultiPlayer.startingIncrement = 0;
             MultiPlayer.currentIndex = 0;
             MultiPlayer.ClearPlayers();
@@ -128,20 +129,23 @@ public static class MiscHooks
                 new IntVector2(self.saveGameData.karma, self.saveGameData.karmaCap),
                 self.saveGameData.karmaReinforced));
 
-            if (Plugin.options.overrideFood.Value)
+            if (Plugin.options.overrideFood.Value) // Food Override
             {
                 // Specific edge case that result from artificer being allowed a cycle 0 save
                 if (slugcatNumber == MoreSlugcatsEnums.SlugcatStatsName.Artificer &&
                     Plugin.options.letEatMeat.Value &&
                     self.saveGameData.cycle == 0)
                 {
-                    self.saveGameData.food = 4;
+
+                    self.saveGameData.food = 4 < Mathf.RoundToInt(Plugin.options.maxFood.Value)
+                        ? 4
+                        : Mathf.RoundToInt(Plugin.options.maxFood.Value);
                 }
 
                 self.hud.AddPart(new FoodMeter(self.hud, Mathf.RoundToInt(Plugin.options.maxFood.Value),
                     Mathf.RoundToInt(Plugin.options.foodToHibernate.Value)));
             }
-            else
+            else // Food Option
             {
                 // The strategy here is to just completely redo the calculation each time because it's inexpensive
                 // and also prevents me from needing to deal with several edge cases related to changing save files

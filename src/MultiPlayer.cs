@@ -8,10 +8,11 @@ namespace Pupify;
 public static class MultiPlayer
 {
     public static GameSession Session;
-    private static List<SlugcatStats> playerStats = new();
+    private static readonly List<SlugcatStats> playerStats = new();
     public static int startingIncrement;
     public static int currentIndex;
     public static int playerToLoad;
+    public static bool onlyPupsLeft;
     
 
     public static void Init()
@@ -60,6 +61,11 @@ public static class MultiPlayer
                                                   currentIndex >= session.arenaSitting?.players.Count &&
                                                   session.arenaSitting?.players.Count != 0))
             {
+                if (Plugin.playersCreated)
+                {
+                    onlyPupsLeft = true;
+                }
+                
                 currentIndex = 0;
                 Plugin.playersCreated = true;
             }
