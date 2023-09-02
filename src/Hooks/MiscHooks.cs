@@ -1,9 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using HarmonyLib;
 using HUD;
+using JollyCoop.JollyMenu;
 using Menu;
+using Menu.Remix;
+using Menu.Remix.MixedUI;
 using RWCustom;
 using UnityEngine;
+using CharacterSelectPage = On.Menu.CharacterSelectPage;
 using MenuLabel = Menu.MenuLabel;
 using MenuObject = Menu.MenuObject;
 using ModdingMenu = On.Menu.ModdingMenu;
@@ -14,14 +19,47 @@ namespace Pupify.Hooks;
 
 public static class MiscHooks
 {
+    private static SymbolButtonTogglePupButton pupButton;
+    private static bool previousState;
+    
     public static void Init()
     {
+        SlugcatSelectMenu.ctor += SlugcatSelectMenu_ctor; 
+        SlugcatSelectMenu.Update += SlugcatSelectMenu_Update;
         ModdingMenu.Singal += ModdingMenu_Singal;
         On.ProcessManager.PostSwitchMainProcess += ProcessManager_PostSwitchMainProcess;
         SlugcatSelectMenu.SlugcatPageContinue.ctor += SlugcatPageContinue_ctor;
     }
-
     
+
+    private static void SlugcatSelectMenu_ctor(SlugcatSelectMenu.orig_ctor orig, Menu.SlugcatSelectMenu self,
+        ProcessManager manager)
+    {
+        orig(self, manager);
+        pupButton = new SymbolButtonTogglePupButton(self, self.backObject, "toggle_pup_0", new Vector2(450f, 50f),
+            new Vector2(45f, 45f), "pup_on", "pup_off", false);
+        self.backObject.subObjects.Add(pupButton);
+        previousState = pupButton.toggled;
+    }
+    
+    
+    private static void SlugcatSelectMenu_Update(SlugcatSelectMenu.orig_Update orig, Menu.SlugcatSelectMenu self)
+    {
+        orig(self);
+        
+        // Eyes default to either opaque or white (I haven't checked) so I need to make them visible 
+        pupButton.faceSymbol.sprite.color = Color.black;
+
+        // Theres no sound when clicked for some reason so I do it myself
+        if (pupButton.isToggled != previousState)
+        {
+            self.PlaySound(SoundID.MENU_Button_Standard_Button_Pressed);
+        }
+
+        previousState = pupButton.isToggled;
+    }
+    
+
     // Yes, the word signal is spelled incorrectly in the internal code
     private static void ModdingMenu_Singal(ModdingMenu.orig_Singal orig, Menu.ModdingMenu self, MenuObject sender, string message)
     {
