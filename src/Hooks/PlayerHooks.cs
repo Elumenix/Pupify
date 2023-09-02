@@ -654,7 +654,7 @@ public static class PlayerHooks
         orig(self, ow);
 
         // Use natural slugpup tail instead of cosmetic mode slugpup tail to prevent corridor stalling
-        if (Plugin.options.onlyCosmetic.Value || self.player.isNPC ||
+        if (Plugin.MakeChanges(self.player) || self.player.isNPC ||
             self.player.SlugCatClass == MoreSlugcatsEnums.SlugcatStatsName.Spear) return;
         
         float num = 0.85f + 0.3f * Mathf.Lerp(self.player.npcStats.Wideness, 0.5f, self.player.playerState.isPup ? 0.5f : 0f);
@@ -724,7 +724,7 @@ public static class PlayerHooks
 
 
         // No point in changing anything else in this case
-        if (Plugin.options.onlyCosmetic.Value  || self.player.isNPC)
+        if (Plugin.MakeChanges(self.player) || self.player.isNPC)
         {
             return;
         }
@@ -989,7 +989,7 @@ public static class PlayerHooks
     public static bool Player_isSlugpup(Player __instance, ref bool __result)
     {
         // Use the base method if in cosmetic mode
-        if (Plugin.options.onlyCosmetic.Value) return true;
+        if (Plugin.MakeChanges(__instance)) return true;
         // This actually is an npc
         __result = true;
 

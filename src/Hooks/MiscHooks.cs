@@ -1,14 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using HarmonyLib;
 using HUD;
 using JollyCoop.JollyMenu;
 using Menu;
-using Menu.Remix;
-using Menu.Remix.MixedUI;
 using RWCustom;
 using UnityEngine;
-using CharacterSelectPage = On.Menu.CharacterSelectPage;
 using MenuLabel = Menu.MenuLabel;
 using MenuObject = Menu.MenuObject;
 using ModdingMenu = On.Menu.ModdingMenu;
@@ -19,7 +15,7 @@ namespace Pupify.Hooks;
 
 public static class MiscHooks
 {
-    private static SymbolButtonTogglePupButton pupButton;
+    public static SymbolButtonTogglePupButton pupButton;
     private static bool previousState;
     
     public static void Init()
@@ -36,8 +32,8 @@ public static class MiscHooks
         ProcessManager manager)
     {
         orig(self, manager);
-        pupButton = new SymbolButtonTogglePupButton(self, self.backObject, "toggle_pup_0", new Vector2(450f, 50f),
-            new Vector2(45f, 45f), "pup_on", "pup_off", false);
+        pupButton = new SymbolButtonTogglePupButton(self, self.backObject, "toggle_pup_0", new Vector2(890f, -10f),
+            new Vector2(45f, 45f), "pup_on", "pup_off", true);
         self.backObject.subObjects.Add(pupButton);
         previousState = pupButton.toggled;
     }
@@ -46,6 +42,17 @@ public static class MiscHooks
     private static void SlugcatSelectMenu_Update(SlugcatSelectMenu.orig_Update orig, Menu.SlugcatSelectMenu self)
     {
         orig(self);
+
+        if (ModManager.JollyCoop && self.slugcatPageIndex is 0 or 1 or 2)
+        {
+            pupButton.pos.x = -6000f;
+            pupButton.pos.y = 3000f;
+        }
+        else
+        {
+            pupButton.pos.x = 890f;
+            pupButton.pos.y = -10f;
+        }
         
         // Eyes default to either opaque or white (I haven't checked) so I need to make them visible 
         pupButton.faceSymbol.sprite.color = Color.black;
