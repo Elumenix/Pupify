@@ -103,7 +103,7 @@ public static class PlayerHooks
     private static int Player_FreeHand(On.Player.orig_FreeHand orig, Player self)
     {
         // This override lets slugpups realize they have a second hand
-        if (!Plugin.options.onlyCosmetic.Value && Plugin.options.bothHands.Value && self.SlugCatClass.value != "Slugpup")
+        if (Plugin.MakeChanges(self) && Plugin.options.bothHands.Value && self.SlugCatClass.value != "Slugpup")
         {
             if (self.grasps[0] != null && self.HeavyCarry(self.grasps[0].grabbed))
             {
@@ -132,7 +132,7 @@ public static class PlayerHooks
     private static void Player_GrabUpdate(On.Player.orig_GrabUpdate orig, Player self, bool eu)
     {
         // Part 1 of this method is simply to allow players to switch hands (if they have two hands)
-        if (!Plugin.options.onlyCosmetic.Value && Plugin.options.bothHands.Value && self.SlugCatClass.value != "Slugpup")
+        if (Plugin.MakeChanges(self) && Plugin.options.bothHands.Value && self.SlugCatClass.value != "Slugpup")
         {
             if (self.input[0].pckp && !self.input[1].pckp && self.switchHandsProcess == 0f)
             {
@@ -171,11 +171,11 @@ public static class PlayerHooks
         orig(self, eu);
 
         // Prevents player from using the stomach whatsoever
-        if (!Plugin.options.onlyCosmetic.Value && !Plugin.options.letStomach.Value && !Plugin.options.letMaul.Value)
+        if (Plugin.MakeChanges(self) && !Plugin.options.letStomach.Value && !Plugin.options.letMaul.Value)
         {
             self.swallowAndRegurgitateCounter = 0;
         }
-        else if (!Plugin.options.onlyCosmetic.Value)
+        else if (Plugin.MakeChanges(self))
         {
             // Allows stomach use while maul is active
             if (!Plugin.options.letStomach.Value && self.maulTimer == 0)
@@ -195,7 +195,7 @@ public static class PlayerHooks
     private static void Player_SlugcatGrab(On.Player.orig_SlugcatGrab orig, Player self, PhysicalObject obj, int graspUsed)
     {
         // This override is so that the player may actually pick up an item into their second hand
-        if (!Plugin.options.onlyCosmetic.Value && Plugin.options.bothHands.Value && self.SlugCatClass.value != "Slugpup")
+        if (Plugin.MakeChanges(self) && Plugin.options.bothHands.Value && self.SlugCatClass.value != "Slugpup")
         {
             // Moon cloak code was apparently unreachable, so it was removed, hopefully that doesn't cause errors
             if (obj is IPlayerEdible && (!ModManager.MMF || obj is Creature {dead: true} ||
@@ -252,7 +252,7 @@ public static class PlayerHooks
         var initial = orig(self, obj);
 
         // If the player is allowed to grab other slugpups
-        if (!Plugin.options.onlyCosmetic.Value && Plugin.options.holdHands.Value && !self.isNPC)
+        if (Plugin.MakeChanges(self) && Plugin.options.holdHands.Value && !self.isNPC)
         {
             if (!(obj is Creature creature && !creature.Template.smallCreature && (creature.dead ||
                     (SlugcatStats.SlugcatCanMaul(self.SlugCatClass) && self.dontGrabStuff < 1 && creature != self &&
@@ -273,7 +273,7 @@ public static class PlayerHooks
     
     private static bool Player_CanEatMeat(On.Player.orig_CanEatMeat orig, Player self, Creature crit)
     {
-        if (!Plugin.options.onlyCosmetic.Value)
+        if (Plugin.MakeChanges(self))
         {
             if (ModManager.MSC && (self.SlugCatClass == MoreSlugcatsEnums.SlugcatStatsName.Saint ||
                                    self.SlugCatClass == MoreSlugcatsEnums.SlugcatStatsName.Spear))
@@ -383,9 +383,20 @@ public static class PlayerHooks
 
 
         // playerCreated is checked solely in case a slugpup spawns, It prevents the slugpup from copying the player stats
-        if (Plugin.options.onlyCosmetic.Value ||
+        if (!Plugin.MakeChanges() ||
             (Plugin.playersCreated && !ModManager.CoopAvailable && MultiPlayer.Session is not ArenaGameSession) ||
-            MultiPlayer.startingIncrement == 4) return;
+            MultiPlayer.startingIncrement == 4)
+        {
+            // ToDO: Make sure that in the case of multiplayer, they still match player one, this might already work but I haven't tested it 
+            // Player is playing as adult but still overriding their food value
+            if (!Plugin.options.onlyCosmetic.Value && Plugin.options.overrideFood.Value)
+            {
+                self.foodToHibernate = Mathf.RoundToInt(Plugin.options.foodToHibernate.Value);
+                self.maxFood = Mathf.RoundToInt(Plugin.options.maxFood.Value);
+            }
+
+            return;
+        }
 
         // This is the last slugcat to determine, make sure the above if block is never true
         // NumAccessed has essentially the same function as onlyPupsLeft but for arena mode instead of story
@@ -654,7 +665,7 @@ public static class PlayerHooks
         orig(self, ow);
 
         // Use natural slugpup tail instead of cosmetic mode slugpup tail to prevent corridor stalling
-        if (Plugin.MakeChanges(self.player) || self.player.isNPC ||
+        if (!Plugin.MakeChanges(self.player) || self.player.isNPC ||
             self.player.SlugCatClass == MoreSlugcatsEnums.SlugcatStatsName.Spear) return;
         
         float num = 0.85f + 0.3f * Mathf.Lerp(self.player.npcStats.Wideness, 0.5f, self.player.playerState.isPup ? 0.5f : 0f);
@@ -724,7 +735,7 @@ public static class PlayerHooks
 
 
         // No point in changing anything else in this case
-        if (Plugin.MakeChanges(self.player) || self.player.isNPC)
+        if (!Plugin.MakeChanges(self.player) || self.player.isNPC)
         {
             return;
         }
@@ -795,7 +806,7 @@ public static class PlayerHooks
         orig(self);
 
         // Player is not in cosmetic mode and limited to one hand
-        if (!((Player) self.owner.owner).isNPC && !Plugin.options.onlyCosmetic.Value && !Plugin.options.bothHands.Value)
+        if (!((Player) self.owner.owner).isNPC && Plugin.MakeChanges((Player) self.owner.owner) && !Plugin.options.bothHands.Value)
         {
             // ReSharper disable once CompareOfFloatsByEqualityOperator
             if ((((Player) self.owner.owner).Consious && ((Player) self.owner.owner).grabbedBy.Count > 0 &&
@@ -989,7 +1000,7 @@ public static class PlayerHooks
     public static bool Player_isSlugpup(Player __instance, ref bool __result)
     {
         // Use the base method if in cosmetic mode
-        if (Plugin.MakeChanges(__instance)) return true;
+        if (!Plugin.MakeChanges(__instance)) return true;
         // This actually is an npc
         __result = true;
 

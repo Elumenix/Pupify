@@ -32,10 +32,11 @@ public static class MiscHooks
         ProcessManager manager)
     {
         orig(self, manager);
+        bool startingValue = pupButton is null || pupButton.isToggled;
         pupButton = new SymbolButtonTogglePupButton(self, self.backObject, "toggle_pup_0", new Vector2(890f, -10f),
-            new Vector2(45f, 45f), "pup_on", "pup_off", true);
+            new Vector2(45f, 45f), "pup_on", "pup_off", startingValue);
         self.backObject.subObjects.Add(pupButton);
-        previousState = pupButton.toggled;
+        previousState = pupButton.isToggled;
     }
     
     
@@ -61,6 +62,32 @@ public static class MiscHooks
         if (pupButton.isToggled != previousState)
         {
             self.PlaySound(SoundID.MENU_Button_Standard_Button_Pressed);
+
+            // This will restructure the food bars on all pages
+            for (int i = 0; i < self.slugcatColorOrder.Count; i++)
+            {
+                if (self.saveGameData[self.slugcatColorOrder[i]] != null)
+                {
+                    self.slugcatPages[i].RemoveSprites();
+                    self.slugcatPages[i] =
+                        new Menu.SlugcatSelectMenu.SlugcatPageContinue(self, null, i + 1, self.slugcatColorOrder[i]);
+                }
+                else
+                {
+                    self.slugcatPages[i].RemoveSprites();
+                    self.slugcatPages[i] =
+                        new Menu.SlugcatSelectMenu.SlugcatPageNewGame(self, null, i + 1, self.slugcatColorOrder[i]);
+                }
+
+                self.pages[i + 1] = self.slugcatPages[i];
+            }
+            
+            // Make sure the start button doesn't clip behind the slugcat image, this was barely noticeable anyway
+            self.pages[0].RemoveSubObject(self.startButton);
+            self.startButton.RemoveSprites();
+            self.startButton = new HoldButton(self, self.pages[0], "", "START", new Vector2(683f, 85f), 40f);
+            self.pages[0].subObjects.Add(self.startButton);
+            self.UpdateStartButtonText();
         }
 
         previousState = pupButton.isToggled;
@@ -108,7 +135,8 @@ public static class MiscHooks
         Menu.SlugcatSelectMenu.SlugcatPageContinue self, Menu.Menu menu, MenuObject owner, int pageIndex,
         SlugcatStats.Name slugcatNumber)
     {
-        if (Plugin.options.onlyCosmetic.Value)
+        if (Plugin.options.onlyCosmetic.Value ||
+            pupButton is not null && !pupButton.isToggled && !Plugin.options.overrideFood.Value)
         {
             orig(self, menu, owner, pageIndex, slugcatNumber);
         }

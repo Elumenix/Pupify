@@ -3,6 +3,7 @@ using System.Security;
 using System.Security.Permissions;
 using BepInEx;
 using Pupify.Hooks;
+using UnityEngine;
 
 #pragma warning disable CS0618
 
@@ -107,12 +108,12 @@ public class Plugin : BaseUnityPlugin
     }
 
 
-    public static bool MakeChanges(Player self)
+    public static bool MakeChanges(Player self = null)
     {
         // Part 1: No changes should be made in cosmetic mode
         // Part 2: No changes should be made in Single Player story mode unless the pupButton is toggled
         if (options.onlyCosmetic.Value || MultiPlayer.Session is StoryGameSession && !ModManager.CoopAvailable &&
-            MiscHooks.pupButton.isToggled)
+            !MiscHooks.pupButton.isToggled)
         {
             return false;
         }

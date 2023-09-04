@@ -184,7 +184,8 @@ public class Options : OptionInterface
             new OpLabel(10f, 200f, "Override Food Values:", true),
             new OpCheckBox(overrideFood, 230f, 200f)
             {
-                description = "Recommended for Coop \n Allows you to customize the limits of the black hole in a slugcats stomach."
+                description = "Recommended for Coop \n Allows you to customize the limits of the black hole in a slugcats stomach." +
+                              "\nNote: This will apply even if you are an adult."
             },
             
             minFood,
