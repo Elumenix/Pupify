@@ -2,6 +2,9 @@
 using System.Linq;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
+using On.Menu;
+using UnityEngine;
+
 
 namespace Pupify;
 
@@ -9,18 +12,87 @@ public static class MultiPlayer
 {
     public static GameSession Session;
     private static readonly List<SlugcatStats> playerStats = new();
+    private static List<bool> makePup = new();
     public static int startingIncrement;
     public static int currentIndex;
     public static int playerToLoad;
     public static bool onlyPupsLeft;
     public static int numAccessed;
+    private static bool rightHeld;
     
 
     public static void Init()
     {
         On.StoryGameSession.ctor += StoryGameSession_ctor;
         On.ArenaGameSession.ctor += ArenaGameSession_ctor;
+        MultiplayerMenu.Update += MultiplayerMenu_Update;
         IL.StoryGameSession.CreateJollySlugStats += StoryGameSession_CreateJollySlugStats;
+    }
+
+    private static void MultiplayerMenu_Update(MultiplayerMenu.orig_Update orig, Menu.MultiplayerMenu self)
+    {
+        orig(self);
+        
+        /*for (int i = 0; i < self.playerJoinButtons.Length; i++)
+        {
+            if (RWInput.PlayerUIInput(i, self.manager.rainWorld).thrw && self.playerJoinButtons[i].Selected)
+            {
+                self.playerJoinButtons[i].roundedRect.borderColor = new HSLColor(0, 100, 50);
+            }
+        }*/
+
+        Debug.Log(self.playerJoinButtons[0].roundedRect.borderColor);
+        Debug.Log(self.playerJoinButtons[2].roundedRect.borderColor);
+        
+        for (int i = 0; i < self.playerJoinButtons.Length; i++)
+        {
+            // Because I want to scale for more than 4 players, I add new ones as they come
+            if (makePup.Count < i + 1)
+            {
+                makePup.Add(false);    
+            }
+
+            if ((self.playerJoinButtons[i].Selected || self.playerClassButtons[i].Selected) && rightHeld &&
+                !Input.GetKey(KeyCode.Mouse1) && !makePup[i])
+            {
+                // Colors boxes red
+                if (self.playerJoinButtons[i].Joined)
+                {
+                    self.playerJoinButtons[i].roundedRect.borderColor = new HSLColor(0, 1, .5f);
+                }
+                else
+                {
+                    self.playerJoinButtons[i].roundedRect.borderColor = new HSLColor(.0055f, 1, .2239f);
+                }
+                
+                self.playerClassButtons[i].roundedRect.borderColor = new HSLColor(0, 1, .5f);
+                self.PlaySound(SoundID.MENU_Button_Standard_Button_Pressed);
+                makePup[i] = true;
+            }
+            else if ((self.playerJoinButtons[i].Selected || self.playerClassButtons[i].Selected) && rightHeld &&
+                     !Input.GetKey(KeyCode.Mouse1) && makePup[i])
+            {
+                // Colors boxes white
+                self.playerJoinButtons[i].roundedRect.borderColor = null;
+                self.playerClassButtons[i].roundedRect.borderColor = null;
+                self.PlaySound(SoundID.MENU_Button_Standard_Button_Pressed);
+                makePup[i] = false;
+            }
+            else if (makePup[i]) // Make sure colors stay updated
+            {
+                // Colors boxes red
+                if (self.playerJoinButtons[i].Joined)
+                {
+                    self.playerJoinButtons[i].roundedRect.borderColor = new HSLColor(0, 1, .5f);
+                }
+                else
+                {
+                    self.playerJoinButtons[i].roundedRect.borderColor = new HSLColor(.0055f, 1, .2239f);
+                }
+            }
+        }
+
+        rightHeld = Input.GetKey(KeyCode.Mouse1);
     }
 
 
