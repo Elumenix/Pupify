@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Security;
 using System.Security.Permissions;
 using BepInEx;
@@ -46,6 +47,12 @@ public class Plugin : BaseUnityPlugin
         {
             if (IsInit) return;
 
+            MiscHooks.saved = new List<FAtlas>();
+            MiscHooks.saved.Add(Futile.atlasManager.LoadImage("atlases/face_pup_off"));
+            MiscHooks.saved.Add(Futile.atlasManager.LoadImage("atlases/face_pup_on"));
+            MiscHooks.saved.Add(Futile.atlasManager.LoadImage("atlases/pup_off"));
+            MiscHooks.saved.Add(Futile.atlasManager.LoadImage("atlases/pup_on"));
+            
             // Setup
             On.RainWorldGame.ShutDownProcess += RainWorldGame_ShutDownProcess;
             On.GameSession.ctor += GameSession_ctor;

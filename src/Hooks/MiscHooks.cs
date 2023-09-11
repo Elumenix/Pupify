@@ -5,6 +5,7 @@ using JollyCoop.JollyMenu;
 using Menu;
 using RWCustom;
 using UnityEngine;
+using MenuIllustration = On.Menu.MenuIllustration;
 using MenuLabel = Menu.MenuLabel;
 using MenuObject = Menu.MenuObject;
 using ModdingMenu = On.Menu.ModdingMenu;
@@ -17,24 +18,104 @@ public static class MiscHooks
 {
     public static SymbolButtonTogglePupButton pupButton;
     private static bool previousState;
+    public static List<FAtlas> saved;
     
     public static void Init()
     {
-        SlugcatSelectMenu.ctor += SlugcatSelectMenu_ctor; 
+        // Todo: remove excess code
+        //MenuIllustration.LoadFile_string += MenuIllustration_LoadFile_string;
+        //On.JollyCoop.JollyMenu.SymbolButtonTogglePupButton.LoadIcon += SymbolButtonTogglePupButton_LoadIcon;
+        On.AssetManager.SafeWWWLoadTexture += AssetManager_SafeWWWLoadTexture;
+        SlugcatSelectMenu.ctor += SlugcatSelectMenu_ctor;
         SlugcatSelectMenu.Update += SlugcatSelectMenu_Update;
         ModdingMenu.Singal += ModdingMenu_Singal;
         On.ProcessManager.PostSwitchMainProcess += ProcessManager_PostSwitchMainProcess;
         SlugcatSelectMenu.SlugcatPageContinue.ctor += SlugcatPageContinue_ctor;
     }
-    
 
+    private static Texture2D AssetManager_SafeWWWLoadTexture(On.AssetManager.orig_SafeWWWLoadTexture orig,
+        ref Texture2D texture2d, string path, bool clampWrapMode, bool crispPixels)
+    {
+        // Urls are purposefully wrong because of how it's programmed
+        if (path.Contains("face_atlases/pup_on"))
+        {
+            return (Texture2D) saved[1].texture;
+        }
+        
+        if (path.Contains("face_atlases/pup_off"))
+        {
+            return (Texture2D) saved[0].texture;
+        }
+        
+        
+        return orig(ref texture2d, path, clampWrapMode, crispPixels);
+    }
+
+
+    private static void MenuIllustration_LoadFile_string(MenuIllustration.orig_LoadFile_string orig,
+        Menu.MenuIllustration self, string folder)
+    {
+        // override so that pictures actually work
+        if (!ModManager.JollyCoop && folder == "Illustrations" &&
+            self.fileName is "atlases/pup_on" or "atlases/pup_off" or "atlases/face_pup_on" or "atlases/face_pup_off")
+        {
+            switch (self.fileName)
+            {
+                case "atlases/pup_on":
+                    self.texture = (Texture2D) saved[3].texture;
+                    break;
+                case "atlases/pup_off":
+                    self.texture = (Texture2D) saved[2].texture;
+                    break;
+                case "atlases/face_pup_on":
+                    self.texture = (Texture2D) saved[1].texture;
+                    break;
+                case "atlases/face_pup_off":
+                    self.texture = (Texture2D) saved[0].texture;
+                    break;
+            }
+        }
+        else
+        {
+            orig(self, folder);
+        }
+    }
+    
+    
+    private static void SymbolButtonTogglePupButton_LoadIcon(On.JollyCoop.JollyMenu.SymbolButtonTogglePupButton.orig_LoadIcon orig, SymbolButtonTogglePupButton self)
+    {
+        if (ModManager.JollyCoop)
+        {
+            orig(self);
+        }
+        else
+        {
+            if (self.faceSymbol != null)
+            {
+                self.faceSymbol.fileName = "atlases/face_" + self.symbol.fileName;
+                //self.faceSymbol.LoadFile();
+                //self.faceSymbol.sprite.SetElementByName(self.faceSymbol.fileName);
+            }
+        }
+    }
+
+    
     private static void SlugcatSelectMenu_ctor(SlugcatSelectMenu.orig_ctor orig, Menu.SlugcatSelectMenu self,
         ProcessManager manager)
     {
         orig(self, manager);
         bool startingValue = pupButton is null || pupButton.isToggled;
-        pupButton = new SymbolButtonTogglePupButton(self, self.backObject, "toggle_pup_0", new Vector2(890f, -10f),
-            new Vector2(45f, 45f), "pup_on", "pup_off", startingValue);
+        if (!ModManager.JollyCoop)
+        {
+            pupButton = new SymbolButtonTogglePupButton(self, self.backObject, "toggle_pup_0", new Vector2(890f, -10f),
+                new Vector2(45f, 45f), "atlases/pup_on", "atlases/pup_off", startingValue);
+        }
+        else
+        {
+            pupButton = new SymbolButtonTogglePupButton(self, self.backObject, "toggle_pup_0", new Vector2(890f, -10f),
+                new Vector2(45f, 45f), "pup_on", "pup_off", startingValue);
+        }
+
         self.backObject.subObjects.Add(pupButton);
         previousState = pupButton.isToggled;
     }

@@ -41,10 +41,10 @@ public static class MultiPlayer
             }
         }*/
 
-        Debug.Log(self.playerJoinButtons[0].roundedRect.borderColor);
-        Debug.Log(self.playerJoinButtons[2].roundedRect.borderColor);
+        //Debug.Log(self.playerJoinButtons[0].roundedRect.borderColor);
+        //Debug.Log(self.playerJoinButtons[2].roundedRect.borderColor);
         
-        for (int i = 0; i < self.playerJoinButtons.Length; i++)
+        for (int i = 0; i < self.playerJoinButtons?.Length; i++)
         {
             // Because I want to scale for more than 4 players, I add new ones as they come
             if (makePup.Count < i + 1)
