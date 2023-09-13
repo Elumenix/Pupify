@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security;
 using System.Security.Permissions;
 using BepInEx;
 using Pupify.Hooks;
+using UnityEngine;
 
 
 #pragma warning disable CS0618
@@ -64,7 +66,7 @@ public class Plugin : BaseUnityPlugin
             MultiPlayer.Init();
             
             // Test code
-            //On.Player.Update += Player_Update;
+            On.Player.Update += Player_Update;
 
             MachineConnector.SetRegisteredOI("elumenix.pupify", options);
             IsInit = true;
@@ -77,7 +79,7 @@ public class Plugin : BaseUnityPlugin
     }
 
     
-    /*private void Player_Update(On.Player.orig_Update orig, Player self, bool eu)
+    private void Player_Update(On.Player.orig_Update orig, Player self, bool eu)
     {
         orig(self, eu);
 
@@ -90,7 +92,7 @@ public class Plugin : BaseUnityPlugin
         Debug.Log(self.abstractCreature.ID + " ThrowingSkill: " + self.slugcatStats.throwingSkill);
         Debug.Log(self.abstractCreature.ID + " PoleClimbSpeed: " + self.slugcatStats.poleClimbSpeedFac);
         Debug.Log(self.abstractCreature.ID + " CorridorClimbSpeed: " + self.slugcatStats.corridorClimbSpeedFac);
-    }*/
+    }
     
     
     private void RainWorldGame_ShutDownProcess(On.RainWorldGame.orig_ShutDownProcess orig, RainWorldGame self)
@@ -111,16 +113,24 @@ public class Plugin : BaseUnityPlugin
     {
         //If you have any collections (lists, dictionaries, etc.)
         //Clear them here to prevent a memory leak
-        //YourList.Clear();
     }
 
 
-    public static bool MakeChanges(Player self = null)
+    public static bool MakeChanges(Player self = null, int id = -1)
     {
+        if (MultiPlayer.makePup == null)
+        {
+            return false;
+        }
+        
         // Part 1: No changes should be made in cosmetic mode
         // Part 2: No changes should be made in Single Player story mode unless the pupButton is toggled
+        // Part 3: No changes should be made in a multiplayer context to this specific player
+        // Part 4: Same as Part 3, but works with slugcatStats instead of player
         if (options.onlyCosmetic.Value || MultiPlayer.Session is StoryGameSession && !ModManager.CoopAvailable &&
-            !MiscHooks.pupButton.isToggled)
+            !MiscHooks.pupButton.isToggled || self != null && MultiPlayer.Session is not StoryGameSession &&
+            !MultiPlayer.makePup[self.abstractCreature.ID.number] ||
+            id != -1 && MultiPlayer.Session is not StoryGameSession && !MultiPlayer.makePup[id])
         {
             return false;
         }

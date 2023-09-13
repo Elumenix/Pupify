@@ -5,7 +5,6 @@ using JollyCoop.JollyMenu;
 using Menu;
 using RWCustom;
 using UnityEngine;
-using MenuIllustration = On.Menu.MenuIllustration;
 using MenuLabel = Menu.MenuLabel;
 using MenuObject = Menu.MenuObject;
 using ModdingMenu = On.Menu.ModdingMenu;
@@ -23,8 +22,6 @@ public static class MiscHooks
     public static void Init()
     {
         // Todo: remove excess code
-        //MenuIllustration.LoadFile_string += MenuIllustration_LoadFile_string;
-        //On.JollyCoop.JollyMenu.SymbolButtonTogglePupButton.LoadIcon += SymbolButtonTogglePupButton_LoadIcon;
         On.AssetManager.SafeWWWLoadTexture += AssetManager_SafeWWWLoadTexture;
         SlugcatSelectMenu.ctor += SlugcatSelectMenu_ctor;
         SlugcatSelectMenu.Update += SlugcatSelectMenu_Update;
@@ -49,54 +46,6 @@ public static class MiscHooks
         
         
         return orig(ref texture2d, path, clampWrapMode, crispPixels);
-    }
-
-
-    private static void MenuIllustration_LoadFile_string(MenuIllustration.orig_LoadFile_string orig,
-        Menu.MenuIllustration self, string folder)
-    {
-        // override so that pictures actually work
-        if (!ModManager.JollyCoop && folder == "Illustrations" &&
-            self.fileName is "atlases/pup_on" or "atlases/pup_off" or "atlases/face_pup_on" or "atlases/face_pup_off")
-        {
-            switch (self.fileName)
-            {
-                case "atlases/pup_on":
-                    self.texture = (Texture2D) saved[3].texture;
-                    break;
-                case "atlases/pup_off":
-                    self.texture = (Texture2D) saved[2].texture;
-                    break;
-                case "atlases/face_pup_on":
-                    self.texture = (Texture2D) saved[1].texture;
-                    break;
-                case "atlases/face_pup_off":
-                    self.texture = (Texture2D) saved[0].texture;
-                    break;
-            }
-        }
-        else
-        {
-            orig(self, folder);
-        }
-    }
-    
-    
-    private static void SymbolButtonTogglePupButton_LoadIcon(On.JollyCoop.JollyMenu.SymbolButtonTogglePupButton.orig_LoadIcon orig, SymbolButtonTogglePupButton self)
-    {
-        if (ModManager.JollyCoop)
-        {
-            orig(self);
-        }
-        else
-        {
-            if (self.faceSymbol != null)
-            {
-                self.faceSymbol.fileName = "atlases/face_" + self.symbol.fileName;
-                //self.faceSymbol.LoadFile();
-                //self.faceSymbol.sprite.SetElementByName(self.faceSymbol.fileName);
-            }
-        }
     }
 
     

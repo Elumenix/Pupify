@@ -382,8 +382,27 @@ public static class PlayerHooks
         orig(self, slugcat, self is {malnourished: true} || focus is {malnourished: true} || malnourished);
 
 
+        // SelfFinder will only obtain a value in multiplayer contexts
+        int selfFinder = -1;
+
+        // TODO: make another for storymode multiplayer
+        if (MultiPlayer.Session is ArenaGameSession session &&
+            (MultiPlayer.currentIndex != 0 || MultiPlayer.currentIndex == 0 && Plugin.playersCreated) &&
+            MultiPlayer.playerStats.Count <= session.arenaSitting.players.Count)
+        {
+            //int i = session.characterStats_Mplayer.Length;
+            //selfFinder = session.Players[i].ID.number;
+            selfFinder = session.characterStats_Mplayer.Count(item => item != null);
+            
+            // All players are finished already, this would be out of range
+            if (selfFinder == session.arenaSitting.players.Count)
+            {
+                selfFinder = -1;
+            }
+        }
+        
         // playerCreated is checked solely in case a slugpup spawns, It prevents the slugpup from copying the player stats
-        if (!Plugin.MakeChanges() ||
+        if (!Plugin.MakeChanges(null, selfFinder) ||
             (Plugin.playersCreated && !ModManager.CoopAvailable && MultiPlayer.Session is not ArenaGameSession) ||
             MultiPlayer.startingIncrement == 4)
         {
