@@ -54,6 +54,7 @@ public static class MiscHooks
             MultiPlayer.playerToLoad = 0;
             MultiPlayer.reorganized = false;
             MultiPlayer.ClearPlayers();
+            MenuHooks.challengePupButton = null; // Lets it show up again
         }
 
         orig(self, ID);

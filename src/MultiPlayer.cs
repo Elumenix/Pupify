@@ -3,6 +3,7 @@ using System.Linq;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using On.Menu;
+using Pupify.Hooks;
 using UnityEngine;
 
 
@@ -212,6 +213,21 @@ public static class MultiPlayer
         }
 
         rightHeld = Input.GetKey(KeyCode.Mouse1);
+
+        if (MenuHooks.challengePupButton == null) return;
+        
+        // Theres no sound when clicked for some reason so I do it myself
+        if (MenuHooks.challengePupButton.isToggled != MenuHooks.arenaPreviousState)
+        {
+            self.PlaySound(SoundID.MENU_Button_Standard_Button_Pressed);
+
+            if (makePup.Count > 0)
+            {
+                makePup[0] = MenuHooks.challengePupButton.isToggled;
+            }
+        }
+
+        MenuHooks.arenaPreviousState = MenuHooks.challengePupButton.isToggled;
     }
     
     

@@ -129,10 +129,12 @@ public class Plugin : BaseUnityPlugin
         
         // Part 1: No changes should be made in cosmetic mode
         // Part 2: No changes should be made in Single Player story mode unless the pupButton is toggled
+        //         pupButton is checked for null because safari mode will take this route and crash the game 
         // Part 3: No changes should be made in a multiplayer context to this specific player
         // Part 4: Same as Part 3, but works with slugcatStats instead of player
         if (options.onlyCosmetic.Value || MultiPlayer.Session is StoryGameSession && !ModManager.CoopAvailable &&
-            !MenuHooks.pupButton.isToggled || self != null && MultiPlayer.Session is not StoryGameSession &&
+            MenuHooks.pupButton != null && !MenuHooks.pupButton.isToggled || self != null &&
+            MultiPlayer.Session is not StoryGameSession &&
             !MultiPlayer.makePup[self.abstractCreature.ID.number] ||
             id != -1 && MultiPlayer.Session is not StoryGameSession && !MultiPlayer.makePup[id])
         {

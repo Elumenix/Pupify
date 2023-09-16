@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using HUD;
 using JollyCoop.JollyMenu;
 using Menu;
@@ -10,6 +11,7 @@ using MenuLabel = Menu.MenuLabel;
 using MenuObject = Menu.MenuObject;
 using ModdingMenu = On.Menu.ModdingMenu;
 using MoreSlugcatsEnums = MoreSlugcats.MoreSlugcatsEnums;
+using MultiplayerMenu = On.Menu.MultiplayerMenu;
 using SlugcatSelectMenu = On.Menu.SlugcatSelectMenu;
 
 namespace Pupify.Hooks;
@@ -18,16 +20,20 @@ public static class MenuHooks
 {
     public static SymbolButtonTogglePupButton pupButton;
     private static bool previousState;
+    public static bool arenaPreviousState;
+    public static SymbolButtonTogglePupButton challengePupButton;
     
     public static void Init()
     {
         // The multiplayer menu is handled in Multiplayer.cs due to easier access to variables
         ArenaSettingsInterface.ctor += ArenaSettingsInterface_ctor;
+        MultiplayerMenu.InitiateGameTypeSpecificButtons += MultiplayerMenu_InitiateGameTypeSpecificButtons;
         SlugcatSelectMenu.ctor += SlugcatSelectMenu_ctor;
         SlugcatSelectMenu.Update += SlugcatSelectMenu_Update;
         ModdingMenu.Singal += ModdingMenu_Singal;
         SlugcatSelectMenu.SlugcatPageContinue.ctor += SlugcatPageContinue_ctor;
     }
+
 
     private static void ArenaSettingsInterface_ctor(ArenaSettingsInterface.orig_ctor orig,
         Menu.ArenaSettingsInterface self, Menu.Menu menu, MenuObject owner)
@@ -43,10 +49,70 @@ public static class MenuHooks
             }
         };
         self.subObjects.Add(tipText);
-        
     }
 
 
+    private static void MultiplayerMenu_InitiateGameTypeSpecificButtons(
+        MultiplayerMenu.orig_InitiateGameTypeSpecificButtons orig, Menu.MultiplayerMenu self)
+    {
+        orig(self);
+
+        if (self.currentGameType == MoreSlugcatsEnums.GameTypeID.Challenge)
+        {
+            if (challengePupButton == null)
+            {
+                // Start by copying whatever the player decided on the arena selection screen
+                bool startingValue = MultiPlayer.makePup.Count >= 1 && MultiPlayer.makePup[0];
+
+                if (MultiPlayer.makePup.Count == 0)
+                {
+                    // If they somehow started here, try copying pupButtons value instead
+                    if (pupButton != null)
+                    {
+                        startingValue = pupButton.isToggled;
+                    }
+                    
+                    // Give at least one value, so the player can actually play challenges
+                    MultiPlayer.makePup.Add(startingValue);
+                }
+
+                if (!ModManager.JollyCoop)
+                {
+                    challengePupButton = new SymbolButtonTogglePupButton(self, self.backObject, "toggle_pup_0",
+                        new Vector2(920f, 500f),
+                        new Vector2(45f, 45f), "atlases/pup_on", "atlases/pup_off", startingValue);
+                }
+                else
+                {
+                    challengePupButton = new SymbolButtonTogglePupButton(self, self.backObject, "toggle_pup_0",
+                        new Vector2(920f, 500f),
+                        new Vector2(45f, 45f), "pup_on", "pup_off", startingValue);
+                }
+
+
+                self.backObject.subObjects.Add(challengePupButton);
+                arenaPreviousState = challengePupButton.isToggled;
+            }
+            else
+            {
+                bool toggleValue = MultiPlayer.makePup.Count >= 1 && MultiPlayer.makePup[0];
+                if (challengePupButton.isToggled != toggleValue)
+                {
+                    challengePupButton.Toggle();
+                }
+                challengePupButton.pos.x = 920f;
+            }
+        }
+        else
+        {
+            if (challengePupButton != null)
+            {
+                challengePupButton.pos.x = 3000f;
+            }
+        }
+    }
+
+    
     private static void SlugcatSelectMenu_ctor(SlugcatSelectMenu.orig_ctor orig, Menu.SlugcatSelectMenu self,
         ProcessManager manager)
     {
