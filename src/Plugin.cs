@@ -49,12 +49,14 @@ public class Plugin : BaseUnityPlugin
         {
             if (IsInit) return;
 
-            MiscHooks.saved = new List<FAtlas>();
-            MiscHooks.saved.Add(Futile.atlasManager.LoadImage("atlases/face_pup_off"));
-            MiscHooks.saved.Add(Futile.atlasManager.LoadImage("atlases/face_pup_on"));
-            MiscHooks.saved.Add(Futile.atlasManager.LoadImage("atlases/pup_off"));
-            MiscHooks.saved.Add(Futile.atlasManager.LoadImage("atlases/pup_on"));
-            
+            MiscHooks.saved = new List<FAtlas>
+            {
+                Futile.atlasManager.LoadImage("atlases/face_pup_off"),
+                Futile.atlasManager.LoadImage("atlases/face_pup_on"),
+                Futile.atlasManager.LoadImage("atlases/pup_off"),
+                Futile.atlasManager.LoadImage("atlases/pup_on")
+            };
+
             // Setup
             On.RainWorldGame.ShutDownProcess += RainWorldGame_ShutDownProcess;
             On.GameSession.ctor += GameSession_ctor;
@@ -64,6 +66,7 @@ public class Plugin : BaseUnityPlugin
             SceneHooks.Init();
             MiscHooks.Init();
             MultiPlayer.Init();
+            MenuHooks.Init();
             
             // Test code
             On.Player.Update += Player_Update;
@@ -128,7 +131,7 @@ public class Plugin : BaseUnityPlugin
         // Part 3: No changes should be made in a multiplayer context to this specific player
         // Part 4: Same as Part 3, but works with slugcatStats instead of player
         if (options.onlyCosmetic.Value || MultiPlayer.Session is StoryGameSession && !ModManager.CoopAvailable &&
-            !MiscHooks.pupButton.isToggled || self != null && MultiPlayer.Session is not StoryGameSession &&
+            !MenuHooks.pupButton.isToggled || self != null && MultiPlayer.Session is not StoryGameSession &&
             !MultiPlayer.makePup[self.abstractCreature.ID.number] ||
             id != -1 && MultiPlayer.Session is not StoryGameSession && !MultiPlayer.makePup[id])
         {
