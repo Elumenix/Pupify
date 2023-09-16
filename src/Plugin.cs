@@ -121,7 +121,8 @@ public class Plugin : BaseUnityPlugin
 
     public static bool MakeChanges(Player self = null, int id = -1)
     {
-        if (MultiPlayer.makePup == null)
+        // Game not instantiated yet or a npc is being checked
+        if (MultiPlayer.makePup == null || self is {isNPC: true})
         {
             return false;
         }

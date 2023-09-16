@@ -52,6 +52,7 @@ public static class MiscHooks
             MultiPlayer.currentIndex = 0;
             MultiPlayer.numAccessed = 0;
             MultiPlayer.playerToLoad = 0;
+            MultiPlayer.reorganized = false;
             MultiPlayer.ClearPlayers();
         }
 

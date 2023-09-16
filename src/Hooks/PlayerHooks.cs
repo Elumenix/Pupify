@@ -381,6 +381,11 @@ public static class PlayerHooks
         // Calling the original just corrects body color changes, all important stats get overwritten after
         orig(self, slugcat, self is {malnourished: true} || focus is {malnourished: true} || malnourished);
 
+        // single vs multiplayer way of determining if only slugpups remain
+        if (MultiPlayer.onlyPupsLeft || MultiPlayer.startingIncrement == 4)
+        {
+            return;
+        }
 
         // SelfFinder will only obtain a value in multiplayer contexts
         int selfFinder = -1;
@@ -390,14 +395,17 @@ public static class PlayerHooks
             (MultiPlayer.currentIndex != 0 || MultiPlayer.currentIndex == 0 && Plugin.playersCreated) &&
             MultiPlayer.playerStats.Count <= session.arenaSitting.players.Count)
         {
-            //int i = session.characterStats_Mplayer.Length;
-            //selfFinder = session.Players[i].ID.number;
+            // Find the index
             selfFinder = session.characterStats_Mplayer.Count(item => item != null);
             
             // All players are finished already, this would be out of range
             if (selfFinder == session.arenaSitting.players.Count)
             {
                 selfFinder = -1;
+            } 
+            else
+            {
+                selfFinder = session.arenaSitting.players[selfFinder].playerNumber;
             }
         }
         
@@ -406,6 +414,20 @@ public static class PlayerHooks
             (Plugin.playersCreated && !ModManager.CoopAvailable && MultiPlayer.Session is not ArenaGameSession) ||
             MultiPlayer.startingIncrement == 4)
         {
+            // Adults don't activate the increments at all when they should increment twice
+            if (MultiPlayer.startingIncrement != 4)
+            {
+                MultiPlayer.numAccessed += 2;
+            }
+            
+            // This is the last slugcat to determine, make sure the above if block is never true
+            // NumAccessed has essentially the same function as onlyPupsLeft but for arena mode instead of story
+            if (MultiPlayer.onlyPupsLeft || MultiPlayer.Session is ArenaGameSession {arenaSitting: not null} arenaSession && 
+                arenaSession.arenaSitting.players.Count != 0 && MultiPlayer.numAccessed == arenaSession.arenaSitting.players.Count * 2)
+            {
+                MultiPlayer.startingIncrement = 4;
+            }
+            
             // ToDO: Make sure that in the case of multiplayer, they still match player one, this might already work but I haven't tested it 
             // Player is playing as adult but still overriding their food value
             if (!Plugin.options.onlyCosmetic.Value && Plugin.options.overrideFood.Value)
@@ -761,7 +783,7 @@ public static class PlayerHooks
         
         // PART 2
         // Some body dimensions need to be outright changed as they are checked with 
-        // slugcatStats instead of isSlugpup. Spearmaster is the only one completely unaffected by this
+        // slugcatStats instead of isSlugpup. SpearMaster is the only one completely unaffected by this
         if (self.player.SlugCatClass != MoreSlugcatsEnums.SlugcatStatsName.Gourmand &&
             self.player.SlugCatClass != MoreSlugcatsEnums.SlugcatStatsName.Spear)
         {
@@ -797,7 +819,7 @@ public static class PlayerHooks
             }
         }
 
-        // This is thankfully a much simpler to check transformation. Only spearmaster behaves differently
+        // This is thankfully a much simpler to check transformation. Only spearMaster behaves differently
         if (self.player.SlugCatClass != MoreSlugcatsEnums.SlugcatStatsName.Spear)
         {
             sLeaser.sprites[3].scaleX *= 0.9f + 0.2f * Mathf.Lerp(self.player.npcStats.Wideness, 0.5f,
@@ -1016,11 +1038,12 @@ public static class PlayerHooks
     }
     
     
+    // ReSharper disable once UnusedMember.Global
     public static bool Player_isSlugpup(Player __instance, ref bool __result)
     {
         // Use the base method if in cosmetic mode
-        if (!Plugin.MakeChanges(__instance)) return true;
-        // This actually is an npc
+        if (!__instance.isNPC && !Plugin.MakeChanges(__instance)) return true;
+        // This is either an npc or adult
         __result = true;
 
         // Don't use the base method

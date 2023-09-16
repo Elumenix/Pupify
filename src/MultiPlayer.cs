@@ -19,6 +19,7 @@ public static class MultiPlayer
     public static bool onlyPupsLeft;
     public static int numAccessed;
     private static bool rightHeld;
+    public static bool reorganized;
     
 
     public static void Init()
@@ -90,25 +91,29 @@ public static class MultiPlayer
     public static SlugcatStats GetSpecificPlayer(int index)
     {
         // Edge case where only players 1 and 3 are active or similar (players are skipped so indexes don't line up)
-        if (index >= playerStats.Count)
+        if (!reorganized)
         {
-            int originalCount = playerStats.Count;
-            
             while (index >= playerStats.Count)
             {
                 playerStats.Add(null);
             }
 
             // This loop puts all players in an position that matches their ID
-            for (int i = 0; i < originalCount; i++)
+            for (int i = 0; i <= index; i++)
             {
-                if (i != Session.Players[i].ID.number)
+                switch (Session)
                 {
-                    int target = Session.Players[i].ID.number;
-                    
-                    (playerStats[target], playerStats[i]) = (playerStats[i], playerStats[target]);
+                    // first half handles competitive arena, second half handles sandbox 
+                    case CompetitiveGameSession compSession when playerStats[i] != compSession.characterStats_Mplayer[i]:
+                        playerStats[i] = compSession.characterStats_Mplayer[i];
+                        break;
+                    case SandboxGameSession session when playerStats[i] != session.characterStats_Mplayer[i]:
+                        playerStats[i] = session.characterStats_Mplayer[i];
+                        break;
                 }
             }
+
+            reorganized = true;
         }
         
         numAccessed++;
@@ -122,7 +127,7 @@ public static class MultiPlayer
         // This will run several more times when slugpup puppets are created, this 
         // prevents those from taking up memory in this class
         if (playerStats.Count != Session.Players.Count && Session is not ArenaGameSession ||
-            Session is ArenaGameSession session && playerStats.Count != session.arenaSitting.players.Count)
+            Session is ArenaGameSession session && playerStats.Count < session.arenaSitting.players.Count)
         {
             playerStats.Add(self);
         }
