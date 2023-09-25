@@ -131,12 +131,18 @@ public class Plugin : BaseUnityPlugin
         // Part 2: No changes should be made in Single Player story mode unless the pupButton is toggled
         //         pupButton is checked for null because safari mode will take this route and crash the game 
         // Part 3: No changes should be made in a multiplayer context to this specific player
-        // Part 4: Same as Part 3, but works with slugcatStats instead of player
+        // Part 4: Same as Part 3, but works with slugcatStats instead of player id
+        // Part 5: No changes for this slugcat in jolly coop story mode, checks jolly's built in options
+        // part 6: Same as part 5, but works with slugcatStats instead of player id
         if (options.onlyCosmetic.Value || MultiPlayer.Session is StoryGameSession && !ModManager.CoopAvailable &&
             MenuHooks.pupButton != null && !MenuHooks.pupButton.isToggled || self != null &&
             MultiPlayer.Session is not StoryGameSession &&
             !MultiPlayer.makePup[self.abstractCreature.ID.number] ||
-            id != -1 && MultiPlayer.Session is not StoryGameSession && !MultiPlayer.makePup[id])
+            id != -1 && MultiPlayer.Session is not StoryGameSession && !MultiPlayer.makePup[id] || id != -1 &&
+            MultiPlayer.Session is StoryGameSession session && ModManager.CoopAvailable &&
+            !session.game.rainWorld.options.jollyPlayerOptionsArray[id].isPup || self != null &&
+            MultiPlayer.Session is StoryGameSession multiSession && ModManager.CoopAvailable && !multiSession.game
+                .rainWorld.options.jollyPlayerOptionsArray[self.abstractCreature.ID.number].isPup)
         {
             return false;
         }

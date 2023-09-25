@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using HarmonyLib;
 using JollyCoop;
+using JollyCoop.JollyMenu;
 using RWCustom;
 using UnityEngine;
 using MoreSlugcatsEnums = MoreSlugcats.MoreSlugcatsEnums;
@@ -249,11 +250,31 @@ public static class PlayerHooks
     private static Player.ObjectGrabability Player_Grabability(On.Player.orig_Grabability orig, Player self, PhysicalObject obj)
     {
         // Figures out grabability for non slugpups
-        var initial = orig(self, obj);
+        Player.ObjectGrabability initial = orig(self, obj);
 
+        // This will allow player slugpups to grab each other and adults in jolly coop
+        if (ModManager.CoopAvailable)
+        {
+            if (obj is Player player && player != self && !player.standing &&
+                !(self.isSlugpup && !Plugin.options.letPickup.Value))
+            {
+                PlayerState playerState = self.playerState;
+                if (playerState == null || !playerState.isGhost)
+                {
+                    JollyPlayerOptions jollyOption = player.JollyOption;
+                    if (jollyOption != null && jollyOption.isPup)
+                    {
+                        return Player.ObjectGrabability.OneHand;
+                    }
+                    return Player.ObjectGrabability.BigOneHand;
+                }
+            }
+        }
+        
         // If the player is allowed to grab other slugpups
         if (Plugin.MakeChanges(self) && Plugin.options.holdHands.Value && !self.isNPC)
         {
+            // Allows grabbing of npc slugpups
             if (!(obj is Creature creature && !creature.Template.smallCreature && (creature.dead ||
                     (SlugcatStats.SlugcatCanMaul(self.SlugCatClass) && self.dontGrabStuff < 1 && creature != self &&
                      !creature.Consious))))
@@ -344,6 +365,8 @@ public static class PlayerHooks
     }
 
 
+    // This is unfortunately a bit messy as this is the method that uses most of pupifys custom variables
+    // If I were to rewrite this I would completely separate the first half by game mode as only about half the code is used
     private static void SlugcatStats_ctor(On.SlugcatStats.orig_ctor orig, SlugcatStats self, SlugcatStats.Name slugcat,
         bool malnourished)
     {
@@ -390,7 +413,6 @@ public static class PlayerHooks
         // SelfFinder will only obtain a value in multiplayer contexts
         int selfFinder = -1;
 
-        // TODO: make another for storymode multiplayer
         if (MultiPlayer.Session is ArenaGameSession session &&
             (MultiPlayer.currentIndex != 0 || MultiPlayer.currentIndex == 0 && Plugin.playersCreated) &&
             MultiPlayer.playerStats.Count <= session.arenaSitting.players.Count)
@@ -407,6 +429,14 @@ public static class PlayerHooks
             {
                 selfFinder = session.arenaSitting.players[selfFinder].playerNumber;
             }
+        }
+        // Jolly coop story mode
+        else if (MultiPlayer.Session is StoryGameSession story && !MultiPlayer.onlyPupsLeft &&
+                 MultiPlayer.startingIncrement == 2)
+        {
+            int numPlayers = story.game.rainWorld.options.JollyPlayerCount;
+            // increment is always 1 step ahead so I need to check the previous and loop to start 
+            selfFinder = (MultiPlayer.currentIndex + numPlayers - 1) % numPlayers;
         }
         
         // playerCreated is checked solely in case a slugpup spawns, It prevents the slugpup from copying the player stats
