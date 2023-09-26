@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Security;
 using System.Security.Permissions;
 using BepInEx;
@@ -69,7 +68,7 @@ public class Plugin : BaseUnityPlugin
             MenuHooks.Init();
             
             // Test code
-            On.Player.Update += Player_Update;
+            //On.Player.Update += Player_Update;
 
             MachineConnector.SetRegisteredOI("elumenix.pupify", options);
             IsInit = true;
@@ -82,6 +81,7 @@ public class Plugin : BaseUnityPlugin
     }
 
     
+    // ReSharper disable once UnusedMember.Local
     private void Player_Update(On.Player.orig_Update orig, Player self, bool eu)
     {
         orig(self, eu);

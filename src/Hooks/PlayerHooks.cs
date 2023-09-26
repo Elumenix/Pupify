@@ -405,7 +405,7 @@ public static class PlayerHooks
         orig(self, slugcat, self is {malnourished: true} || focus is {malnourished: true} || malnourished);
 
         // single vs multiplayer way of determining if only slugpups remain
-        if (MultiPlayer.onlyPupsLeft || MultiPlayer.startingIncrement == 4)
+        if (MultiPlayer.onlyPupsLeft && !ModManager.CoopAvailable || MultiPlayer.startingIncrement == 4)
         {
             return;
         }

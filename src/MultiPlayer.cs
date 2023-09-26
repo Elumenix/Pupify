@@ -48,6 +48,16 @@ public static class MultiPlayer
                 check = 2;
             }
 
+            // verify that the current index is marked as a player that should be a slugpup
+            // current index can be wrong now that players are allowed to play as adults
+            if (Session is StoryGameSession gameSession && ModManager.CoopAvailable)
+            {
+                while (Plugin.playersCreated && startingIncrement > 1 && !gameSession.game.rainWorld.options.jollyPlayerOptionsArray[currentIndex].isPup)
+                {
+                    currentIndex++;
+                } 
+            }
+            
             SlugcatStats value = startingIncrement >= check ? playerStats[currentIndex] : Plugin.currentSlugcat;
 
             if (startingIncrement < check)
