@@ -33,7 +33,7 @@ public static class MultiPlayer
 
 
     #region Stats Handling
-    public static SlugcatStats GetCurrentPlayer()
+    public static SlugcatStats GetCurrentPlayer(SlugcatStats.Name self)
     {
         if (ModManager.CoopAvailable || Session is not StoryGameSession)
         {
@@ -56,7 +56,7 @@ public static class MultiPlayer
                 // to run in situations where I didn't intend, which may cause more slugcats to be established 
                 int count = gameSession.game.rainWorld.options.jollyPlayerOptionsArray.Count(player => player.isPup);
                 
-                while (count > 0 && Plugin.playersCreated && startingIncrement > 1 &&
+                while (self == MoreSlugcats.MoreSlugcatsEnums.SlugcatStatsName.Slugpup && count > 0 && Plugin.playersCreated && startingIncrement > 1 &&
                        !gameSession.game.rainWorld.options.jollyPlayerOptionsArray[currentIndex].isPup)
                 {
                     currentIndex++;
@@ -85,7 +85,16 @@ public static class MultiPlayer
                                                   currentIndex >= session.arenaSitting?.players.Count &&
                                                   session.arenaSitting?.players.Count != 0))
             {
-                if (Plugin.playersCreated)
+                int count = -1;
+                if (Session is StoryGameSession && ModManager.CoopAvailable)
+                {
+                    count = Session.game.rainWorld.options.jollyPlayerOptionsArray.Count(player => player.isPup);
+                }
+
+                // Normally only playersCreated needs to be checked
+                // The rest is in case other mods alter slugcats and cause subsequent calls to the method
+                if (Plugin.playersCreated && (count == -1 || count == 0 ||
+                                              count > 0 && self == MoreSlugcats.MoreSlugcatsEnums.SlugcatStatsName.Slugpup))
                 {
                     onlyPupsLeft = true;
                 }
@@ -93,6 +102,27 @@ public static class MultiPlayer
                 currentIndex = 0;
                 Plugin.playersCreated = true;
             }
+
+            // This may solve a potential issue where onlyPupsLeft is never true if the final slugcat isn't a pup
+            if (Plugin.playersCreated && Session is StoryGameSession checkSession &&
+                self == MoreSlugcats.MoreSlugcatsEnums.SlugcatStatsName.Slugpup)
+            {
+                int lastSlugpup = -1;
+
+                for (int i = checkSession.characterStatsJollyplayer.Length - 1; i > 0; i--)
+                {
+                    if (checkSession.game.rainWorld.options.jollyPlayerOptionsArray[i].isPup)
+                    {
+                        lastSlugpup = i;
+                        break;
+                    }
+                }
+                
+                if (lastSlugpup != -1 && checkSession.characterStatsJollyplayer[lastSlugpup] == value)
+                {
+                    onlyPupsLeft = true;
+                }
+            } 
             
             return value;
         }

@@ -21,6 +21,7 @@ public class Plugin : BaseUnityPlugin
 	public static Options options;
     public static SlugcatStats currentSlugcat;
     public static bool playersCreated = false;
+    public static bool foodBarsEnabled;
 
     public Plugin()
     {
@@ -77,6 +78,16 @@ public class Plugin : BaseUnityPlugin
         {
             Logger.LogError(ex);
             throw;
+        }
+
+
+        foreach (ModManager.Mod activeMod in ModManager.ActiveMods)
+        {
+            // ReSharper disable twice StringLiteralTypo
+            if (activeMod.id == "sprobgik.individualfoodbars")
+            {
+                foodBarsEnabled = true;
+            }
         }
     }
 

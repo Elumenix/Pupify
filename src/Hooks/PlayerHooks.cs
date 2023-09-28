@@ -392,7 +392,7 @@ public static class PlayerHooks
             }
             else
             {
-                focus = MultiPlayer.GetCurrentPlayer() ?? self;
+                focus = MultiPlayer.GetCurrentPlayer(slugcat) ?? self;
             }
         }
         else
@@ -572,8 +572,16 @@ public static class PlayerHooks
                 // values for starvation, and some might not even be able to reach their min value
                 // if player one has a smaller min value than them. Standardizing it to the campaign
                 // slugcat standardizes starving for everyone and simplifies the food screen
-                self.foodToHibernate = Plugin.currentSlugcat.foodToHibernate;
-                self.maxFood = Plugin.currentSlugcat.maxFood;
+                if (!Plugin.foodBarsEnabled || Plugin.options.overrideFood.Value)
+                {
+                    self.foodToHibernate = Plugin.currentSlugcat.foodToHibernate;
+                    self.maxFood = Plugin.currentSlugcat.maxFood;
+                }
+                else // These should actually be kept intact for the individual food bars mod
+                {
+                    self.foodToHibernate = focus.foodToHibernate;
+                    self.maxFood = focus.maxFood;
+                }
             }
         }
 
@@ -690,7 +698,7 @@ public static class PlayerHooks
     {
         // When the game is in a state where coop is enabled, starvation is calculated differently, which
         // led to a glitch where the player always starves with the introduced food mechanic changes
-        if (!Plugin.options.onlyCosmetic.Value && ModManager.CoopAvailable)
+        if (!Plugin.options.onlyCosmetic.Value && !Plugin.foodBarsEnabled && ModManager.CoopAvailable)
         {
             List<PhysicalObject> list = (from x in self.room.physicalObjects.SelectMany(x => x)
                 where x is Player
