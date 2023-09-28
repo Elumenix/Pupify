@@ -431,12 +431,20 @@ public static class PlayerHooks
             }
         }
         // Jolly coop story mode
-        else if (MultiPlayer.Session is StoryGameSession story && !MultiPlayer.onlyPupsLeft &&
+        else if (MultiPlayer.Session is StoryGameSession story && MultiPlayer.startingIncrement >= 2 &&
+                 (!MultiPlayer.onlyPupsLeft ||
+                   story.characterStatsJollyplayer[story.characterStatsJollyplayer.Length - 1] == focus) &&
                  MultiPlayer.startingIncrement == 2)
         {
             int numPlayers = story.game.rainWorld.options.JollyPlayerCount;
             // increment is always 1 step ahead so I need to check the previous and loop to start 
             selfFinder = (MultiPlayer.currentIndex + numPlayers - 1) % numPlayers;
+
+            // because multiplayer initiates a second slugcat before the actual ones for a reason I don't remember
+            if (story.characterStatsJollyplayer[0] == null)
+            {
+                selfFinder = -1;
+            }
         }
         
         // playerCreated is checked solely in case a slugpup spawns, It prevents the slugpup from copying the player stats

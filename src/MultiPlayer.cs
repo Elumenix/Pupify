@@ -52,7 +52,12 @@ public static class MultiPlayer
             // current index can be wrong now that players are allowed to play as adults
             if (Session is StoryGameSession gameSession && ModManager.CoopAvailable)
             {
-                while (Plugin.playersCreated && startingIncrement > 1 && !gameSession.game.rainWorld.options.jollyPlayerOptionsArray[currentIndex].isPup)
+                // This is a statement added for other mods like individual food bars that might cause this method
+                // to run in situations where I didn't intend, which may cause more slugcats to be established 
+                int count = gameSession.game.rainWorld.options.jollyPlayerOptionsArray.Count(player => player.isPup);
+                
+                while (count > 0 && Plugin.playersCreated && startingIncrement > 1 &&
+                       !gameSession.game.rainWorld.options.jollyPlayerOptionsArray[currentIndex].isPup)
                 {
                     currentIndex++;
                 } 
