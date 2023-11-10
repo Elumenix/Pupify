@@ -38,9 +38,8 @@ public static class MiscHooks
         // Multiplayer menu check is so that players can switch between characters in the arena 
         // otherwise the same recolored character will be used if the player goes back to arena with a different character
 
-        if (!Plugin.options.onlyCosmetic.Value &&
-            ((ID == ProcessManager.ProcessID.Game && self.oldProcess.ID != ProcessManager.ProcessID.MultiplayerMenu) ||
-             ID == ProcessManager.ProcessID.MultiplayerMenu))
+        if ((ID == ProcessManager.ProcessID.Game && self.oldProcess.ID != ProcessManager.ProcessID.MultiplayerMenu) ||
+             ID == ProcessManager.ProcessID.MultiplayerMenu)
         {
             // Allow game to set up starving values : Should not be nullified if switching into arena mode, or 
             // else the stats reference will be nullified and the game will crash

@@ -49,14 +49,17 @@ public static class PlayerHooks
     private static void Player_ctor(On.Player.orig_ctor orig, Player self, AbstractCreature abstractCreature, World world)
     {
         orig(self, abstractCreature, world);
-
-        // Aesthetic Mode : Yes, this is all that is needed
-        if (Plugin.options.onlyCosmetic.Value)
+        
+        // Cosmetic mode handler ; this is all that is needed for this to function
+        if (Plugin.options.onlyCosmetic.Value && !self.isNPC && (MultiPlayer.Session is not StoryGameSession &&
+                                                  MultiPlayer.makePup[self.abstractCreature.ID.number] ||
+                                                  MultiPlayer.Session is StoryGameSession &&
+                                                  !ModManager.CoopAvailable && MenuHooks.pupButton != null && MenuHooks.pupButton.isToggled))
         {
-            // The player will be drawn as a pup, but they won't function differently
             self.setPupStatus(true);
         }
-        else
+
+        if (!Plugin.options.onlyCosmetic.Value)
         {
             // natural slugpup
             if (self.isNPC)
@@ -441,7 +444,7 @@ public static class PlayerHooks
             selfFinder = (MultiPlayer.currentIndex + numPlayers - 1) % numPlayers;
 
             // because multiplayer initiates a second slugcat before the actual ones for a reason I don't remember
-            if (story.characterStatsJollyplayer[0] == null)
+            if (story.characterStatsJollyplayer?[0] == null)
             {
                 selfFinder = -1;
             }

@@ -173,7 +173,7 @@ public static class MultiPlayer
         // This will run several more times when slugpup puppets are created, this 
         // prevents those from taking up memory in this class
         if (playerStats.Count != Session.Players.Count && Session is not ArenaGameSession ||
-            Session is ArenaGameSession session && playerStats.Count < session.arenaSitting.players.Count)
+            Session is ArenaGameSession session && playerStats.Count < session.arenaSitting?.players.Count)
         {
             playerStats.Add(self);
         }

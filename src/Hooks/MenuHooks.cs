@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using HUD;
 using JollyCoop.JollyMenu;
 using Menu;
@@ -96,11 +95,22 @@ public static class MenuHooks
             else
             {
                 bool toggleValue = MultiPlayer.makePup.Count >= 1 && MultiPlayer.makePup[0];
-                if (challengePupButton.isToggled != toggleValue)
+                if (!ModManager.JollyCoop)
                 {
-                    challengePupButton.Toggle();
+                    challengePupButton = new SymbolButtonTogglePupButton(self, self.backObject, "toggle_pup_0",
+                        new Vector2(920f, 500f),
+                        new Vector2(45f, 45f), "atlases/pup_on", "atlases/pup_off", toggleValue);
                 }
-                challengePupButton.pos.x = 920f;
+                else
+                {
+                    challengePupButton = new SymbolButtonTogglePupButton(self, self.backObject, "toggle_pup_0",
+                        new Vector2(920f, 500f),
+                        new Vector2(45f, 45f), "pup_on", "pup_off", toggleValue);
+                }
+
+
+                self.backObject.subObjects.Add(challengePupButton);
+                arenaPreviousState = challengePupButton.isToggled;
             }
         }
         else
