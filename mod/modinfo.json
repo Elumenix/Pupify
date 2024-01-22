@@ -6,5 +6,6 @@
   "description": "Time for some slugpup campaigns!",
   "requirements": ["moreslugcats"],
   "requirements_names": ["More Slugcats Expansion"],
+  "tags": [ "Game Mechanics", "Accessibility", "Cosmetics" ],
   "checksum_override_version": true
 }
